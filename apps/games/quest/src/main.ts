@@ -67,7 +67,7 @@ createMobileControls({
 type Point = { x: number; y: number };
 type Item = Point & { collected: boolean };
 type Trap = Point & { active: boolean };
-type Enemy = Point & { vx: number; vy: number };
+type Enemy = Point & { vx: number; vy: number; wx: number; wy: number; wt: number };
 
 const state = {
   running: false,
@@ -175,11 +175,15 @@ function spawnTraps(count: number) {
 
 function spawnEnemies(count: number) {
   for (let i = 0; i < count; i++) {
+    const angle = rand(0, Math.PI * 2);
     state.enemies.push({
       x: rand(state.width * 0.3, state.width * 0.8),
       y: rand(80, state.height - 80),
       vx: rand(-1, 1) || 0.5,
       vy: rand(-0.6, 0.6),
+      wx: Math.cos(angle),
+      wy: Math.sin(angle),
+      wt: rand(1.2, 3),
     });
   }
 }
@@ -253,19 +257,30 @@ function update(dt: number) {
 
   // Enemies
   state.enemies.forEach((enemy) => {
+    enemy.wt -= dt;
+    if (!state.chaseActive && enemy.wt <= 0) {
+      const ang = rand(0, Math.PI * 2);
+      enemy.wx = Math.cos(ang);
+      enemy.wy = Math.sin(ang);
+      enemy.wt = rand(1.4, 3.2);
+    }
     const dx = state.player.x - enemy.x;
     const dy = state.player.y - enemy.y;
     const dist = Math.max(1, Math.sqrt(dx * dx + dy * dy));
-    const dirX = state.chaseActive ? dx / dist : 0;
-    const dirY = state.chaseActive ? dy / dist : 0;
-    const swayX = rand(-0.08, 0.08);
-    const swayY = rand(-0.08, 0.08);
+    const dirX = state.chaseActive ? dx / dist : enemy.wx;
+    const dirY = state.chaseActive ? dy / dist : enemy.wy;
+    const swayX = rand(-0.12, 0.12);
+    const swayY = rand(-0.12, 0.12);
     const speed = state.enemySpeed;
-    const followWeight = state.chaseActive ? 0.7 : 0.25;
+    const followWeight = state.chaseActive ? 0.9 : 0.45;
     enemy.vx = clamp(enemy.vx * 0.8 + (dirX * followWeight + swayX) * 0.8, -1.8, 1.8);
     enemy.vy = clamp(enemy.vy * 0.8 + (dirY * followWeight + swayY) * 0.8, -1.6, 1.6);
     enemy.x += enemy.vx * speed * (dt * 60);
     enemy.y += enemy.vy * speed * (dt * 60);
+    if (!state.chaseActive) {
+      if (enemy.x < 20 || enemy.x > state.width - 20) enemy.wx = -enemy.wx;
+      if (enemy.y < 40 || enemy.y > state.height - 40) enemy.wy = -enemy.wy;
+    }
     enemy.x = clamp(enemy.x, 20, state.width - 20);
     enemy.y = clamp(enemy.y, 40, state.height - 40);
   });
