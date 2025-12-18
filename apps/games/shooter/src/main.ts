@@ -56,6 +56,16 @@ const controls = {
   altShoot: "Space",
 };
 
+const difficultyPresets = {
+  easy: { label: "Facile", waves: 10, lives: 5, heartRate: 0.003, boostRate: 0.002 },
+  medium: { label: "Moyen", waves: 20, lives: 4, heartRate: 0.002, boostRate: 0.0014 },
+  hard: { label: "Difficile", waves: 30, lives: 3, heartRate: 0.001, boostRate: 0.0009 },
+  extreme: { label: "Extrême", waves: 50, lives: 1, heartRate: 0, boostRate: 0 },
+  endless: { label: "Infini", waves: Infinity, lives: 3, heartRate: 0.0012, boostRate: 0.0009 },
+} as const;
+type DifficultyKey = keyof typeof difficultyPresets;
+let selectedDifficulty: DifficultyKey = "medium";
+
 createMobileControls({
   container: document.body,
   input,
@@ -95,6 +105,8 @@ const state = {
   lives: 3,
   maxLives: 5,
   maxWave: config?.difficultyParams.wavesToWin ?? 3,
+  heartSpawnRate: 0.0018,
+  boostSpawnRate: 0.001,
 };
 
 function resize() {
@@ -121,6 +133,7 @@ function startGame() {
     showOverlay("Config manquante", "Ajoute configs/games/shooter.config.json", false);
     return;
   }
+  const preset = difficultyPresets[selectedDifficulty] || difficultyPresets.medium;
   state.running = true;
   state.player.x = state.width / 2;
   state.player.y = state.height * 0.78;
@@ -134,8 +147,11 @@ function startGame() {
   state.spawnTimer = 0;
   state.wave = 1;
   state.waveTimer = config.difficultyParams.waveLength;
-  state.maxWave = config.difficultyParams.wavesToWin ?? 3;
-  state.lives = 3;
+  state.maxWave = preset.waves;
+  state.lives = preset.lives;
+  state.maxLives = preset.lives;
+  state.heartSpawnRate = preset.heartRate;
+  state.boostSpawnRate = preset.boostRate;
   state.cooldownPaused = 0;
   overlay.style.display = "none";
   emitEvent({ type: "SESSION_START", gameId: GAME_ID });
@@ -164,7 +180,18 @@ function showOverlay(title: string, body: string, showStart = true) {
       <p class="pill">Pixel Shooter</p>
       <h2>${title}</h2>
       <p>${body}</p>
-      <div style="display:flex; gap:10px; justify-content:center; margin-top:12px;">
+      <div class="diff-row" style="display:flex; gap:8px; flex-wrap:wrap; margin:12px 0;">
+        ${Object.entries(difficultyPresets)
+          .map(
+            ([key, preset]) => `
+              <button class="btn ghost diff-btn ${key === selectedDifficulty ? "active" : ""}" data-diff="${key}">
+                ${preset.label} · ${preset.waves === Infinity ? "∞" : preset.waves} vagues · ${preset.lives} vies
+              </button>
+            `,
+          )
+          .join("")}
+      </div>
+      <div style="display:flex; gap:10px; justify-content:center; margin-top:12px; flex-wrap:wrap;">
         ${showStart ? `<button class="btn" id="play-btn">Lancer</button>` : ""}
         <a class="btn secondary" href="${withBasePath("/apps/hub/", import.meta.env.BASE_URL)}">Hub</a>
       </div>
@@ -172,6 +199,15 @@ function showOverlay(title: string, body: string, showStart = true) {
   `;
   const play = document.getElementById("play-btn");
   play?.addEventListener("click", startGame);
+  document.querySelectorAll<HTMLButtonElement>(".diff-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const diff = btn.dataset.diff as DifficultyKey | undefined;
+      if (diff && difficultyPresets[diff]) {
+        selectedDifficulty = diff;
+        showOverlay(title, body, showStart);
+      }
+    });
+  });
 }
 
 showOverlay(config?.uiText.title || "Pixel Shooter", config?.uiText.help || "");
@@ -228,7 +264,7 @@ function update(dt: number) {
   }
 
   // Spawn hearts occasionally (rarer than enemies)
-  if (Math.random() < 0.0018 * dt * 60) {
+  if (state.heartSpawnRate > 0 && Math.random() < state.heartSpawnRate * dt * 60) {
     state.hearts.push({
       x: rand(20, state.width - 20),
       y: -20,
@@ -237,7 +273,7 @@ function update(dt: number) {
   }
 
   // Spawn cooldown boosts (rarer)
-  if (Math.random() < 0.001 * dt * 60) {
+  if (state.boostSpawnRate > 0 && Math.random() < state.boostSpawnRate * dt * 60) {
     state.boosts.push({
       x: rand(20, state.width - 20),
       y: -20,
@@ -419,9 +455,10 @@ function renderHUD() {
   ui.appendChild(overlay);
   const hud = document.createElement("div");
   hud.className = "hud";
+  const waveLabel = state.maxWave === Infinity ? "∞" : state.maxWave;
   hud.innerHTML = `
     <div class="pill">Score ${state.score}</div>
-    <div class="pill">Wave ${state.wave}/${state.maxWave}</div>
+    <div class="pill">Wave ${state.wave}/${waveLabel}</div>
     <div class="pill">Combo ${state.combo} (${state.comboTimer.toFixed(1)}s)</div>
     <div class="pill">Vies ${state.lives}/${state.maxLives}</div>
     ${
