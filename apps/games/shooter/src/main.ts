@@ -45,6 +45,11 @@ const controls = {
   left: config?.input.keys.left || "ArrowLeft",
   right: config?.input.keys.right || "ArrowRight",
   shoot: config?.input.keys.shoot || "Space",
+  altUp: "ArrowUp",
+  altDown: "ArrowDown",
+  altLeft: "ArrowLeft",
+  altRight: "ArrowRight",
+  altShoot: "Space",
 };
 
 createMobileControls({
@@ -94,6 +99,10 @@ const loop = createGameLoop({
   render,
   fps: 60,
 });
+
+function isDownAny(...codes: (string | undefined)[]) {
+  return codes.some((c) => (c ? input.isDown(c) : false));
+}
 
 function startGame() {
   if (!config) {
@@ -170,8 +179,12 @@ function update(dt: number) {
   }
 
   // Movement
-  const moveX = (input.isDown(controls.right) ? 1 : 0) + (input.isDown(controls.left) ? -1 : 0);
-  const moveY = (input.isDown(controls.down) ? 1 : 0) + (input.isDown(controls.up) ? -1 : 0);
+  const moveX =
+    (isDownAny(controls.right, controls.altRight, "KeyD") ? 1 : 0) +
+    (isDownAny(controls.left, controls.altLeft, "KeyQ", "KeyA") ? -1 : 0);
+  const moveY =
+    (isDownAny(controls.down, controls.altDown, "KeyS") ? 1 : 0) +
+    (isDownAny(controls.up, controls.altUp, "KeyZ", "KeyW") ? -1 : 0);
   state.player.x += moveX * config.difficultyParams.playerSpeed * (dt * 60);
   state.player.y += moveY * config.difficultyParams.playerSpeed * (dt * 60);
   state.player.x = clamp(state.player.x, state.player.r, state.width - state.player.r);
@@ -179,7 +192,7 @@ function update(dt: number) {
 
   // Shooting
   const shootKey = controls.shoot;
-  if (input.isDown(shootKey) && state.lastShot > 0.18) {
+  if (isDownAny(shootKey, controls.altShoot) && state.lastShot > 0.18) {
     state.bullets.push({ x: state.player.x, y: state.player.y - 8, speed: config.difficultyParams.bulletSpeed });
     state.lastShot = 0;
   }
