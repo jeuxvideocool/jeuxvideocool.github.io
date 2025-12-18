@@ -70,6 +70,16 @@
       "previewEmoji": "🧬",
       "order": 0,
       "lastUpdated": "2024-11-01"
+    },
+    {
+      "id": "yeti",
+      "title": "Yeti Launch",
+      "description": "Frappe le pingouin, vise juste et rebondis sur les mines glacées.",
+      "tags": ["arcade", "physique"],
+      "themeId": "frost",
+      "previewEmoji": "🐧",
+      "order": 7,
+      "lastUpdated": "2025-01-01"
     }
   ]
 }

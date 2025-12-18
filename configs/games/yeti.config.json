@@ -1,0 +1,41 @@
+{
+  "id": "yeti",
+  "saveSchemaVersion": 1,
+  "themeId": "frost",
+  "xpRules": {
+    "SESSION_START": 3,
+    "SESSION_WIN": 50,
+    "SESSION_FAIL": 10,
+    "MINE_BOOST": 4
+  },
+  "uiText": {
+    "title": "Yeti Launch",
+    "shortDescription": "Charge la batte, frappe et rebondis sur les mines pour battre ton record.",
+    "help": "Appuie une fois sur Espace pour figer l'angle, une seconde fois pour verrouiller la puissance. Les mines font rebondir le pingouin, les pieux rouges l'arrêtent net. R pour relancer.",
+    "controls": ["Espace : angle puis puissance", "R : rejouer"]
+  },
+  "difficultyParams": {
+    "minAngle": 18,
+    "maxAngle": 72,
+    "aimSpeed": 2.3,
+    "powerSpeed": 3.1,
+    "basePower": 940,
+    "gravity": 1750,
+    "airDrag": 70,
+    "groundDrag": 240,
+    "bounceFactor": 0.6,
+    "mineLift": 1250,
+    "mineBoost": 280,
+    "winDistance": 1000,
+    "courseLength": 4600,
+    "mineCount": 7,
+    "trapCount": 5,
+    "windMax": 42
+  },
+  "input": {
+    "keys": {
+      "swing": "Space",
+      "restart": "KeyR"
+    }
+  }
+}

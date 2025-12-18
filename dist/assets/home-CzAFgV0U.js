@@ -1,4 +1,4 @@
-import{g as i,w as a}from"./loaders-CNHm-dlv.js";const t=document.getElementById("app"),r=i(),c=a("/"),n=a("/apps/profil/"),l=r.games.slice().sort((s,e)=>(s.order??0)-(e.order??0)).slice(0,3);t.innerHTML=`
+import{g as i,w as a}from"./loaders-C9UKxqwl.js";const t=document.getElementById("app"),r=i(),c=a("/"),n=a("/apps/profil/"),l=r.games.slice().sort((s,e)=>(s.order??0)-(e.order??0)).slice(0,3);t.innerHTML=`
   <div class="shell">
     <header class="hero">
       <div class="badge">Arcade Galaxy</div>

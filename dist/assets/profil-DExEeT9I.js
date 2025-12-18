@@ -1,4 +1,4 @@
-import{a as f,g as $,w as y}from"./loaders-CNHm-dlv.js";import{g as E,u as I,c as B,e as k,b as S,i as h}from"./index-niTdxgfr.js";import{g as L,c as u,s as P,l as w}from"./cloud-B4CuE7-U.js";const x=document.getElementById("app");function l(){const t=E(),c=f().achievements,d=new Set(t.save.achievementsUnlocked),r=$(),s=L();x.innerHTML=`
+import{a as f,g as $,w as y}from"./loaders-C9UKxqwl.js";import{g as E,u as I,c as B,e as k,b as S,i as h}from"./index-PQ3ZrJi4.js";import{g as L,c as u,s as P,l as w}from"./cloud-B4CuE7-U.js";const x=document.getElementById("app");function l(){const t=E(),c=f().achievements,d=new Set(t.save.achievementsUnlocked),r=$(),s=L();x.innerHTML=`
     <div class="shell">
       <header class="hero">
         <div>

@@ -1,0 +1,38 @@
+<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="body" x1="36" y1="20" x2="120" y2="144" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B1E35"/>
+      <stop offset="1" stop-color="#13395C"/>
+    </linearGradient>
+    <linearGradient id="belly" x1="64" y1="54" x2="104" y2="126" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F9FCFF"/>
+      <stop offset="1" stop-color="#E5EFFA"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="54" y1="26" x2="82" y2="70" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7BE0FF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#7BE0FF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <path
+    d="M80 18c-28 0-50 26-50 58 0 26 12 53 50 78 38-25 50-52 50-78 0-32-22-58-50-58Z"
+    fill="url(#body)"
+    stroke="#0AF0FF"
+    stroke-width="4"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M80 34c-17 0-30 16-30 36 0 16 8 34 30 50 22-16 30-34 30-50 0-20-13-36-30-36Z"
+    fill="url(#belly)"
+  />
+  <ellipse cx="80" cy="64" rx="22" ry="24" fill="url(#shine)" />
+  <path d="M68 106c-8 10-26 10-30 4 2-6 12-10 22-10 4 0 6 2 8 6Z" fill="#FFB157" opacity="0.9" />
+  <path d="M92 106c8 10 26 10 30 4-2-6-12-10-22-10-4 0-6 2-8 6Z" fill="#FFB157" opacity="0.9" />
+  <path d="M80 68c6 0 12 4 12 6s-6 4-12 4-12-2-12-4 6-6 12-6Z" fill="#F2A950" />
+  <circle cx="66" cy="54" r="8" fill="#0A0F1F" />
+  <circle cx="94" cy="54" r="8" fill="#0A0F1F" />
+  <circle cx="64" cy="52" r="3" fill="#fff" />
+  <circle cx="92" cy="52" r="3" fill="#fff" />
+  <path d="M80 78c-6 6-12 10-12 16 0 3 4 8 12 8s12-5 12-8c0-6-6-10-12-16Z" fill="#FFB157" opacity="0.9" />
+  <path d="M58 86c-6-4-12-10-14-18 2-6 8-12 14-14-6 8-6 24 0 32Z" fill="#0AF0FF" opacity="0.55" />
+  <path d="M102 86c6-4 12-10 14-18-2-6-8-12-14-14 6 8 6 24 0 32Z" fill="#0AF0FF" opacity="0.55" />
+</svg>

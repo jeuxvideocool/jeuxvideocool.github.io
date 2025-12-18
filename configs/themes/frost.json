@@ -1,0 +1,14 @@
+{
+  "id": "frost",
+  "name": "Fjord givré",
+  "colors": {
+    "primary": "#7be0ff",
+    "secondary": "#dff6ff",
+    "accent": "#ffb157",
+    "background": "#081221",
+    "surface": "#0d192c",
+    "text": "#e6f3ff",
+    "muted": "#8ea7c6"
+  },
+  "gradient": "linear-gradient(135deg, #0b1f35 0%, #102a44 40%, #081221 100%)"
+}
