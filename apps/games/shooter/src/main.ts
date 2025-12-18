@@ -68,6 +68,7 @@ const mobileControls = createMobileControls({
     actionALabel: "Tir",
   },
   autoShow: false,
+  showPad: false,
 });
 
 const difficultyPresets = {

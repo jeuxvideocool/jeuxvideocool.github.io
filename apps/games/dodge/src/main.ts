@@ -52,6 +52,7 @@ const mobileControls = createMobileControls({
     actionALabel: "Dash",
   },
   autoShow: false,
+  showPad: false,
 });
 
 type Obstacle = { x: number; y: number; size: number; speed: number };

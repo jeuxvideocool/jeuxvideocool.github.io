@@ -146,6 +146,7 @@ type MobileControlsOptions = {
   showOnDesktop?: boolean;
   autoShow?: boolean;
   showFullscreenToggle?: boolean;
+  showPad?: boolean;
 };
 
 let mobileStylesInjected = false;
@@ -185,9 +186,9 @@ function injectMobileStyles() {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(3, 1fr);
-      gap: 8px;
-      width: 200px;
-      max-width: 42vw;
+      gap: 6px;
+      width: 168px;
+      max-width: 36vw;
       justify-self: start;
       background: rgba(0, 0, 0, 0.2);
       border-radius: 16px;
@@ -197,19 +198,19 @@ function injectMobileStyles() {
     }
     .mobile-actions {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       justify-self: end;
     }
     .mobile-btn {
-      width: 64px;
-      height: 64px;
-      border-radius: 16px;
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
       border: 1px solid rgba(255,255,255,0.18);
       background: linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
       color: #f7fbff;
       font-weight: 800;
-      font-size: 16px;
-      box-shadow: 0 10px 28px rgba(0,0,0,0.28);
+      font-size: 15px;
+      box-shadow: 0 10px 22px rgba(0,0,0,0.26);
       cursor: pointer;
       touch-action: none;
     }
@@ -235,11 +236,10 @@ function injectMobileStyles() {
     }
     .mobile-gesture {
       position: fixed;
-      left: 0;
-      bottom: 0;
-      width: 55vw;
-      height: 60vh;
-      pointer-events: all;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
       touch-action: none;
       z-index: 29;
     }
@@ -340,6 +340,7 @@ export function createMobileControls(options: MobileControlsOptions) {
     showOnDesktop = false,
     autoShow = true,
     showFullscreenToggle = true,
+    showPad = false,
   } = options;
   if (!container) return { dispose: () => {} };
   injectMobileStyles();
@@ -349,6 +350,7 @@ export function createMobileControls(options: MobileControlsOptions) {
   if (!autoShow) {
     root.classList.add("mc-hidden");
   }
+  root.style.display = autoShow ? "grid" : "none";
 
   const pad = document.createElement("div");
   pad.className = "mobile-pad";
@@ -379,9 +381,9 @@ export function createMobileControls(options: MobileControlsOptions) {
   if (actionA) actions.appendChild(actionA);
   if (actionB) actions.appendChild(actionB);
 
-  const hasPad = Boolean(mapping.up || mapping.down || mapping.left || mapping.right);
+  const hasDirections = Boolean(mapping.up || mapping.down || mapping.left || mapping.right);
+  const hasPad = hasDirections && showPad;
   const hasActions = Boolean(actionA || actionB);
-  const hasDirections = hasPad;
 
   if (hasPad) root.appendChild(pad);
   if (hasActions) root.appendChild(actions);
@@ -413,6 +415,7 @@ export function createMobileControls(options: MobileControlsOptions) {
   if (hasDirections) {
     gestureEl = document.createElement("div");
     gestureEl.className = "mobile-gesture";
+    gestureEl.style.background = "transparent";
     container.appendChild(gestureEl);
     gestureCleanup = bindGestureZone(gestureEl, mapping, input);
   }
@@ -423,8 +426,10 @@ export function createMobileControls(options: MobileControlsOptions) {
 
   const updateVisibility = (visible: boolean) => {
     root.classList.toggle("mc-hidden", !visible);
+    root.style.display = visible ? "grid" : "none";
     if (gestureEl) {
       gestureEl.style.display = visible ? "block" : "none";
+      gestureEl.style.pointerEvents = visible ? "all" : "none";
     }
   };
 

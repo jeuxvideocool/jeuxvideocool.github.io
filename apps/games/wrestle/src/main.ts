@@ -89,6 +89,7 @@ const mobileControls = createMobileControls({
     actionBLabel: "P2",
   },
   autoShow: false,
+  showPad: false,
 });
 
 function resize() {

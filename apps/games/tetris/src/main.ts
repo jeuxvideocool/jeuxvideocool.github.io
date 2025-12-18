@@ -122,6 +122,7 @@ const mobileControls = createMobileControls({
     actionBLabel: "Drop",
   },
   autoShow: false,
+  showPad: false,
 });
 
 const keyLatch: Record<string, boolean> = {};

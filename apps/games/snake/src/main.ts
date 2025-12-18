@@ -64,6 +64,7 @@ const mobileControls = createMobileControls({
     actionALabel: "Boost",
   },
   autoShow: false,
+  showPad: false,
 });
 
 const difficultyPresets = {
