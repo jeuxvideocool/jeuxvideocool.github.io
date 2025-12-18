@@ -122,6 +122,9 @@ const state = {
   enemySpeed: config?.difficultyParams.enemySpeed ?? 1.5,
   hitPenalty: config?.difficultyParams.hitPenalty ?? 6,
   invulnerable: 0,
+  level: 1,
+  baseTime: config?.difficultyParams.timeLimitSeconds ?? 60,
+  timeDecay: 5,
 };
 
 function resize() {
@@ -144,7 +147,21 @@ function startGame() {
     showOverlay("Config manquante", "Ajoute configs/games/quest.config.json", false);
     return;
   }
+  const preset = difficultyPresets[selectedDifficulty] || difficultyPresets.medium;
   state.running = true;
+  state.baseTime = preset.timeLimit;
+  state.timeDecay = 5;
+  state.level = 1;
+  state.enemySpeed = preset.enemySpeed;
+  state.hitPenalty = preset.hitPenalty;
+  state.invulnerable = 1;
+  prepareLevel(preset);
+  overlay.style.display = "none";
+  emitEvent({ type: "SESSION_START", gameId: GAME_ID });
+  loop.start();
+}
+
+function prepareLevel(preset = difficultyPresets[selectedDifficulty] || difficultyPresets.medium) {
   state.player.x = state.width * 0.15;
   state.player.y = state.height / 2;
   state.items = [];
@@ -152,17 +169,11 @@ function startGame() {
   state.enemies = [];
   state.collected = 0;
   state.gate = { x: state.width * 0.85, y: state.height / 2, open: false };
-  const preset = difficultyPresets[selectedDifficulty] || difficultyPresets.medium;
-  state.timer = preset.timeLimit;
-  state.enemySpeed = preset.enemySpeed;
-  state.hitPenalty = preset.hitPenalty;
+  const timeBudget = Math.max(10, state.baseTime - (state.level - 1) * state.timeDecay);
+  state.timer = timeBudget;
   spawnItems(preset.itemCount);
   spawnTraps(preset.trapCount);
   spawnEnemies(preset.enemyCount);
-  state.invulnerable = 1;
-  overlay.style.display = "none";
-  emitEvent({ type: "SESSION_START", gameId: GAME_ID });
-  loop.start();
 }
 
 function spawnItems(count: number) {
@@ -320,7 +331,7 @@ function update(dt: number) {
     const dy = trap.y - state.player.y;
     if (Math.sqrt(dx * dx + dy * dy) < state.player.r + 10) {
       trap.active = false;
-      state.timer = Math.max(0, state.timer - 5);
+      endGame(false);
       emitEvent({ type: "TRAP_TRIGGERED", gameId: GAME_ID });
     }
   });
@@ -329,7 +340,8 @@ function update(dt: number) {
   const dxGate = state.gate.x - state.player.x;
   const dyGate = state.gate.y - state.player.y;
   if (state.gate.open && Math.sqrt(dxGate * dxGate + dyGate * dyGate) < state.player.r + 16) {
-    endGame(true);
+    state.level += 1;
+    prepareLevel();
   }
 }
 
@@ -418,6 +430,7 @@ function renderHUD() {
     <div class="pill">Porte ${state.gate.open ? "ouverte" : "fermée"}</div>
     <div class="pill">Ennemis ${state.enemies.length}</div>
     <div class="pill">Difficulté ${difficultyPresets[selectedDifficulty].label}</div>
+    <div class="pill">Niveau ${state.level}</div>
   `;
   ui.appendChild(hud);
 }
