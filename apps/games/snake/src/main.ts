@@ -52,22 +52,32 @@ const controls = {
   dash: config?.input.keys.dash || "Space",
 };
 
-const mobileControls = createMobileControls({
-  container: document.body,
-  input,
-  mapping: {
-    up: controls.up,
-    down: controls.down,
-    left: controls.left,
-    right: controls.right,
-    actionA: controls.dash,
-    actionALabel: "Boost",
-  },
-  autoShow: false,
-  showPad: true,
-  gestureEnabled: false,
-  showOnDesktop: false,
-});
+const isMobile =
+  typeof window !== "undefined" &&
+  (window.matchMedia?.("(pointer: coarse)")?.matches || navigator.maxTouchPoints > 0);
+
+const mobileControls = isMobile
+  ? createMobileControls({
+      container: document.body,
+      input,
+      mapping: {
+        up: controls.up,
+        down: controls.down,
+        left: controls.left,
+        right: controls.right,
+        actionA: controls.dash,
+        actionALabel: "Boost",
+      },
+      autoShow: false,
+      showPad: true,
+      gestureEnabled: false,
+      showOnDesktop: false,
+    })
+  : {
+      show: () => {},
+      hide: () => {},
+      dispose: () => {},
+    };
 
 const difficultyPresets = {
   easy: {
