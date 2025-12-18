@@ -48,6 +48,7 @@ canvas {
 .hud {
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
@@ -78,6 +79,13 @@ canvas {
   padding: 18px;
   text-align: center;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+.subtext {
+  margin: 6px 0 2px;
+  color: var(--color-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 .btn {

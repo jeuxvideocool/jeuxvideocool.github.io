@@ -48,49 +48,8 @@ const controls = {
   down: config?.input.keys.down || "ArrowDown",
   left: config?.input.keys.left || "ArrowLeft",
   right: config?.input.keys.right || "ArrowRight",
+  attack: (config as any)?.input?.keys?.attack || (config as any)?.input?.keys?.interact || "Space",
 };
-
-const difficultyPresets = {
-  easy: {
-    label: "Facile",
-    timeLimit: 80,
-    itemCount: 6,
-    trapCount: 3,
-    enemyCount: 2,
-    enemySpeed: 1.1,
-    hitPenalty: 5,
-  },
-  medium: {
-    label: "Moyen",
-    timeLimit: config?.difficultyParams.timeLimitSeconds ?? 60,
-    itemCount: config?.difficultyParams.itemCount ?? 6,
-    trapCount: config?.difficultyParams.trapCount ?? 4,
-    enemyCount: config?.difficultyParams.enemyCount ?? 3,
-    enemySpeed: config?.difficultyParams.enemySpeed ?? 1.5,
-    hitPenalty: config?.difficultyParams.hitPenalty ?? 6,
-  },
-  hard: {
-    label: "Difficile",
-    timeLimit: 55,
-    itemCount: 7,
-    trapCount: 5,
-    enemyCount: 4,
-    enemySpeed: 1.8,
-    hitPenalty: 8,
-  },
-  extreme: {
-    label: "Extrême",
-    timeLimit: 50,
-    itemCount: 8,
-    trapCount: 6,
-    enemyCount: 5,
-    enemySpeed: 2.1,
-    hitPenalty: 10,
-  },
-} as const;
-
-type DifficultyKey = keyof typeof difficultyPresets;
-let selectedDifficulty: DifficultyKey = "medium";
 
 createMobileControls({
   container: document.body,
@@ -100,6 +59,8 @@ createMobileControls({
     down: controls.down,
     left: controls.left,
     right: controls.right,
+    actionA: controls.attack,
+    actionALabel: "Frappe",
   },
 });
 
@@ -120,11 +81,15 @@ const state = {
   timer: config?.difficultyParams.timeLimitSeconds ?? 60,
   collected: 0,
   enemySpeed: config?.difficultyParams.enemySpeed ?? 1.5,
-  hitPenalty: config?.difficultyParams.hitPenalty ?? 6,
   invulnerable: 0,
   level: 1,
   baseTime: config?.difficultyParams.timeLimitSeconds ?? 60,
   timeDecay: 5,
+  baseItemCount: config?.difficultyParams.itemCount ?? 6,
+  baseTrapCount: config?.difficultyParams.trapCount ?? 4,
+  baseEnemyCount: config?.difficultyParams.enemyCount ?? 3,
+  baseEnemySpeed: config?.difficultyParams.enemySpeed ?? 1.5,
+  attackTimer: 0,
 };
 
 function resize() {
@@ -147,21 +112,19 @@ function startGame() {
     showOverlay("Config manquante", "Ajoute configs/games/quest.config.json", false);
     return;
   }
-  const preset = difficultyPresets[selectedDifficulty] || difficultyPresets.medium;
   state.running = true;
-  state.baseTime = preset.timeLimit;
+  state.baseTime = config?.difficultyParams.timeLimitSeconds ?? 60;
   state.timeDecay = 5;
   state.level = 1;
-  state.enemySpeed = preset.enemySpeed;
-  state.hitPenalty = preset.hitPenalty;
-  state.invulnerable = 1;
-  prepareLevel(preset);
+  state.invulnerable = 0;
+  state.attackTimer = 0;
+  prepareLevel();
   overlay.style.display = "none";
   emitEvent({ type: "SESSION_START", gameId: GAME_ID });
   loop.start();
 }
 
-function prepareLevel(preset = difficultyPresets[selectedDifficulty] || difficultyPresets.medium) {
+function prepareLevel() {
   state.player.x = state.width * 0.15;
   state.player.y = state.height / 2;
   state.items = [];
@@ -171,9 +134,15 @@ function prepareLevel(preset = difficultyPresets[selectedDifficulty] || difficul
   state.gate = { x: state.width * 0.85, y: state.height / 2, open: false };
   const timeBudget = Math.max(10, state.baseTime - (state.level - 1) * state.timeDecay);
   state.timer = timeBudget;
-  spawnItems(preset.itemCount);
-  spawnTraps(preset.trapCount);
-  spawnEnemies(preset.enemyCount);
+  const levelFactor = state.level - 1;
+  const itemCount = state.baseItemCount;
+  const trapCount = state.baseTrapCount + Math.min(levelFactor, 4);
+  const enemyCount = state.baseEnemyCount + Math.min(levelFactor, 6);
+  state.enemySpeed = state.baseEnemySpeed + levelFactor * 0.15;
+  state.attackTimer = 0;
+  spawnItems(itemCount);
+  spawnTraps(trapCount);
+  spawnEnemies(enemyCount);
 }
 
 function spawnItems(count: number) {
@@ -223,24 +192,18 @@ function endGame(win: boolean) {
 }
 
 function showOverlay(title: string, body: string, showStart = true) {
-  const preset = difficultyPresets[selectedDifficulty] || difficultyPresets.medium;
+  const description =
+    body && body.trim().length
+      ? body
+      : "Récupère les artefacts, esquive les pièges et repousse les monstres pour atteindre la porte.";
+  const attackLabel = controls.attack === " " ? "Espace" : controls.attack;
   overlay.style.display = "grid";
   overlay.innerHTML = `
     <div class="panel">
-      <p class="pill">Mini Quest · ${preset.label}</p>
+      <p class="pill">Mini Quest · Montée en tension</p>
       <h2>${title}</h2>
-      <p>${body}</p>
-      <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:10px 0 6px;">
-        ${Object.entries(difficultyPresets)
-          .map(
-            ([key, p]) => `
-              <button class="btn ghost diff-btn ${key === selectedDifficulty ? "active" : ""}" data-diff="${key}">
-                ${p.label} · ${p.itemCount} items · ${p.timeLimit}s
-              </button>
-            `,
-          )
-          .join("")}
-      </div>
+      <p>${description}</p>
+      <p class="subtext">Chaque porte réduit le temps disponible et renforce les ennemis : plus rapides, plus nombreux. Collecte tout, évite les pièges et frappe (${attackLabel}) pour les repousser.</p>
       <div style="display:flex; gap:10px; justify-content:center; margin-top:12px; flex-wrap:wrap;">
         ${showStart ? `<button class="btn" id="play-btn">Lancer</button>` : ""}
         <a class="btn secondary" href="${withBasePath("/apps/hub/", import.meta.env.BASE_URL)}">Hub</a>
@@ -249,15 +212,6 @@ function showOverlay(title: string, body: string, showStart = true) {
   `;
   const play = document.getElementById("play-btn");
   play?.addEventListener("click", startGame);
-  document.querySelectorAll<HTMLButtonElement>(".diff-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const diff = btn.dataset.diff as DifficultyKey | undefined;
-      if (diff && difficultyPresets[diff]) {
-        selectedDifficulty = diff;
-        showOverlay(title, body, showStart);
-      }
-    });
-  });
 }
 
 showOverlay(config?.uiText.title || "Mini Quest", config?.uiText.help || "");
@@ -266,6 +220,7 @@ function update(dt: number) {
   if (!state.running || !config) return;
   state.timer -= dt;
   state.invulnerable = Math.max(0, state.invulnerable - dt);
+  state.attackTimer = Math.max(0, state.attackTimer - dt);
   if (state.timer <= 0) {
     endGame(false);
     return;
@@ -280,16 +235,20 @@ function update(dt: number) {
 
   // Enemies
   state.enemies.forEach((enemy) => {
-    enemy.x += enemy.vx * state.enemySpeed * (dt * 60);
-    enemy.y += enemy.vy * state.enemySpeed * (dt * 60);
-    if (enemy.x < 20 || enemy.x > state.width - 20) enemy.vx *= -1;
-    if (enemy.y < 40 || enemy.y > state.height - 40) enemy.vy *= -1;
-    if (Math.random() < 0.01) {
-      enemy.vx += rand(-0.2, 0.2);
-      enemy.vy += rand(-0.2, 0.2);
-    }
-    enemy.vx = clamp(enemy.vx, -1.4, 1.4);
-    enemy.vy = clamp(enemy.vy, -1.2, 1.2);
+    const dx = state.player.x - enemy.x;
+    const dy = state.player.y - enemy.y;
+    const dist = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+    const dirX = dx / dist;
+    const dirY = dy / dist;
+    const swayX = rand(-0.05, 0.05);
+    const swayY = rand(-0.05, 0.05);
+    const speed = state.enemySpeed + Math.min(state.level * 0.05, 1);
+    enemy.vx = clamp(enemy.vx * 0.8 + (dirX + swayX) * 0.6, -1.8, 1.8);
+    enemy.vy = clamp(enemy.vy * 0.8 + (dirY + swayY) * 0.6, -1.6, 1.6);
+    enemy.x += enemy.vx * speed * (dt * 60);
+    enemy.y += enemy.vy * speed * (dt * 60);
+    enemy.x = clamp(enemy.x, 20, state.width - 20);
+    enemy.y = clamp(enemy.y, 40, state.height - 40);
   });
 
   // Enemy collisions
@@ -298,14 +257,32 @@ function update(dt: number) {
       const dx = enemy.x - state.player.x;
       const dy = enemy.y - state.player.y;
       if (Math.sqrt(dx * dx + dy * dy) < state.player.r + 14) {
-        state.timer = Math.max(0, state.timer - state.hitPenalty);
-        state.invulnerable = 1.2;
-        state.player.x = state.width * 0.15;
-        state.player.y = state.height / 2;
+        endGame(false);
         emitEvent({ type: "PLAYER_HIT", gameId: GAME_ID });
-        break;
+        return;
       }
     }
+  }
+
+  // Attack (knockback enemies)
+  if (state.attackTimer <= 0 && input.isDown(controls.attack)) {
+    state.attackTimer = 0.6;
+    state.invulnerable = 0.4;
+    const radius = 80;
+    state.enemies.forEach((enemy) => {
+      const dx = enemy.x - state.player.x;
+      const dy = enemy.y - state.player.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < radius) {
+        const force = 2 + (radius - dist) / radius * 2;
+        const nx = dist ? dx / dist : 1;
+        const ny = dist ? dy / dist : 0;
+        enemy.vx = nx * force;
+        enemy.vy = ny * force;
+        enemy.x += nx * 10;
+        enemy.y += ny * 10;
+      }
+    });
   }
 
   // Items
@@ -425,12 +402,11 @@ function renderHUD() {
   const hud = document.createElement("div");
   hud.className = "hud";
   hud.innerHTML = `
+    <div class="pill">Niveau ${state.level}</div>
     <div class="pill">Temps ${state.timer.toFixed(1)}s</div>
     <div class="pill">Objets ${state.collected}/${state.items.length}</div>
     <div class="pill">Porte ${state.gate.open ? "ouverte" : "fermée"}</div>
     <div class="pill">Ennemis ${state.enemies.length}</div>
-    <div class="pill">Difficulté ${difficultyPresets[selectedDifficulty].label}</div>
-    <div class="pill">Niveau ${state.level}</div>
   `;
   ui.appendChild(hud);
 }
