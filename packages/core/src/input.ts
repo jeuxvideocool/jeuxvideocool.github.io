@@ -144,6 +144,8 @@ type MobileControlsOptions = {
   input: HybridInput;
   mapping: MobileMapping;
   showOnDesktop?: boolean;
+  autoShow?: boolean;
+  showFullscreenToggle?: boolean;
 };
 
 let mobileStylesInjected = false;
@@ -160,6 +162,7 @@ function injectMobileStyles() {
       display: grid;
       grid-template-columns: 1fr 1fr;
       padding: 12px;
+      transition: opacity 0.25s ease, transform 0.25s ease;
     }
     .mobile-controls.hidden-desktop {
       display: none;
@@ -168,6 +171,11 @@ function injectMobileStyles() {
       .mobile-controls.hidden-desktop {
         display: grid;
       }
+    }
+    .mobile-controls.mc-hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
     }
     .mobile-pad, .mobile-actions {
       pointer-events: all;
@@ -208,6 +216,22 @@ function injectMobileStyles() {
     .mobile-btn:active {
       transform: scale(0.96);
       background: linear-gradient(145deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
+    }
+    .mobile-fs-btn {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.08);
+      color: #f7fbff;
+      font-weight: 800;
+      font-size: 18px;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.26);
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .mobile-fs-btn:active {
+      transform: scale(0.95);
     }
     .mobile-gesture {
       position: fixed;
@@ -309,12 +333,22 @@ function bindGestureZone(
 }
 
 export function createMobileControls(options: MobileControlsOptions) {
-  const { container, input, mapping, showOnDesktop = false } = options;
+  const {
+    container,
+    input,
+    mapping,
+    showOnDesktop = false,
+    autoShow = true,
+    showFullscreenToggle = true,
+  } = options;
   if (!container) return { dispose: () => {} };
   injectMobileStyles();
 
   const root = document.createElement("div");
   root.className = `mobile-controls ${showOnDesktop ? "" : "hidden-desktop"}`.trim();
+  if (!autoShow) {
+    root.classList.add("mc-hidden");
+  }
 
   const pad = document.createElement("div");
   pad.className = "mobile-pad";
@@ -352,6 +386,28 @@ export function createMobileControls(options: MobileControlsOptions) {
   if (hasPad) root.appendChild(pad);
   if (hasActions) root.appendChild(actions);
 
+  const fsBtn = showFullscreenToggle ? document.createElement("button") : null;
+  if (fsBtn) {
+    fsBtn.type = "button";
+    fsBtn.className = "mobile-fs-btn";
+    fsBtn.textContent = "⤢";
+    fsBtn.title = "Plein écran";
+    fsBtn.addEventListener("click", () => {
+      const el = document.fullscreenElement;
+      if (el) {
+        document.exitFullscreen().catch(() => {});
+      } else {
+        (document.documentElement as any)?.requestFullscreen?.().catch(() => {});
+      }
+    });
+    const fsWrap = document.createElement("div");
+    fsWrap.style.pointerEvents = "all";
+    fsWrap.style.alignSelf = "start";
+    fsWrap.style.justifySelf = "end";
+    fsWrap.appendChild(fsBtn);
+    root.appendChild(fsWrap);
+  }
+
   let gestureCleanup: (() => void) | undefined;
   let gestureEl: HTMLDivElement | undefined;
   if (hasDirections) {
@@ -361,11 +417,26 @@ export function createMobileControls(options: MobileControlsOptions) {
     gestureCleanup = bindGestureZone(gestureEl, mapping, input);
   }
 
-  if (hasPad || hasActions) {
+  if (hasPad || hasActions || fsBtn) {
     container.appendChild(root);
   }
 
+  const updateVisibility = (visible: boolean) => {
+    root.classList.toggle("mc-hidden", !visible);
+    if (gestureEl) {
+      gestureEl.style.display = visible ? "block" : "none";
+    }
+  };
+
+  updateVisibility(autoShow);
+
   return {
+    show() {
+      updateVisibility(true);
+    },
+    hide() {
+      updateVisibility(false);
+    },
     dispose() {
       root.remove();
       if (gestureEl?.parentElement) {

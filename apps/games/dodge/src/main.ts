@@ -40,7 +40,7 @@ const controls = {
   dash: config?.input.keys.dash || "Space",
 };
 
-createMobileControls({
+const mobileControls = createMobileControls({
   container: document.body,
   input,
   mapping: {
@@ -51,6 +51,7 @@ createMobileControls({
     actionA: controls.dash,
     actionALabel: "Dash",
   },
+  autoShow: false,
 });
 
 type Obstacle = { x: number; y: number; size: number; speed: number };
@@ -106,6 +107,7 @@ function startGame() {
     showOverlay("Config introuvable", "Ajoute configs/games/dodge.config.json", false);
     return;
   }
+  mobileControls.show();
   const durationInput = document.getElementById("run-duration") as HTMLInputElement | null;
   if (durationInput && state.mode === "timed") {
     const parsed = Math.max(10, Math.min(999, Number(durationInput.value) || state.runDuration));
@@ -131,6 +133,7 @@ function startGame() {
 function endGame(win: boolean) {
   state.running = false;
   loop.stop();
+  mobileControls.hide();
   const score = Math.floor(state.time);
   const eventType = win ? "SESSION_WIN" : "SESSION_FAIL";
   emitEvent({ type: eventType, gameId: GAME_ID, payload: { score } });
@@ -146,6 +149,7 @@ function endGame(win: boolean) {
 }
 
 function showOverlay(title: string, body: string, showStart = true) {
+  mobileControls.hide();
   overlay.style.display = "grid";
   overlay.innerHTML = `
     <div class="panel">

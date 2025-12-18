@@ -56,6 +56,20 @@ const controls = {
   altShoot: "Space",
 };
 
+const mobileControls = createMobileControls({
+  container: document.body,
+  input,
+  mapping: {
+    up: controls.up,
+    down: controls.down,
+    left: controls.left,
+    right: controls.right,
+    actionA: controls.shoot,
+    actionALabel: "Tir",
+  },
+  autoShow: false,
+});
+
 const difficultyPresets = {
   easy: { label: "Facile", waves: 10, lives: 5, heartRate: 0.003, boostRate: 0.002 },
   medium: { label: "Moyen", waves: 20, lives: 4, heartRate: 0.002, boostRate: 0.0014 },
@@ -135,6 +149,7 @@ function startGame() {
     showOverlay("Config manquante", "Ajoute configs/games/shooter.config.json", false);
     return;
   }
+  mobileControls.show();
   const preset = difficultyPresets[selectedDifficulty] || difficultyPresets.medium;
   state.running = true;
   state.player.x = state.width / 2;
@@ -165,6 +180,7 @@ function startGame() {
 function endGame(win: boolean) {
   state.running = false;
   loop.stop();
+  mobileControls.hide();
   const eventType = win ? "SESSION_WIN" : "SESSION_FAIL";
   emitEvent({ type: eventType, gameId: GAME_ID, payload: { score: state.score } });
   updateGameState(GAME_ID, config?.saveSchemaVersion ?? 1, (game) => {
@@ -178,6 +194,7 @@ function endGame(win: boolean) {
 }
 
 function showOverlay(title: string, body: string, showStart = true) {
+  mobileControls.hide();
   overlay.style.display = "grid";
   overlay.innerHTML = `
     <div class="panel">

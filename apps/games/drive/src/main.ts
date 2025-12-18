@@ -38,7 +38,7 @@ const controls = {
   boost: config?.input.keys.boost || "ArrowUp",
 };
 
-createMobileControls({
+const mobileControls = createMobileControls({
   container: document.body,
   input,
   mapping: {
@@ -48,6 +48,7 @@ createMobileControls({
     actionA: controls.boost,
     actionALabel: "Boost",
   },
+  autoShow: false,
 });
 
 const carSprite = new Image();
@@ -113,6 +114,7 @@ function startGame() {
     showOverlay("Config à compléter", "Crée configs/games/drive.config.json", false);
     return;
   }
+  mobileControls.show();
   reset();
   state.running = true;
   overlay.style.display = "none";
@@ -123,6 +125,7 @@ function startGame() {
 function endGame(win: boolean) {
   state.running = false;
   loop.stop();
+  mobileControls.hide();
   const eventType = win ? "SESSION_WIN" : "SESSION_FAIL";
   emitEvent({ type: eventType, gameId: GAME_ID, payload: { score: Math.floor(state.distance) } });
   if (config) {
@@ -296,6 +299,7 @@ function renderHUD() {
 }
 
 function showOverlay(title: string, body: string, showStart = true) {
+  mobileControls.hide();
   overlay.style.display = "grid";
   overlay.innerHTML = `
     <div class="panel">

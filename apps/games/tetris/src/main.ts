@@ -108,7 +108,7 @@ const keys = {
   drop: config?.input.keys.drop || "Space",
 };
 
-createMobileControls({
+const mobileControls = createMobileControls({
   container: document.body,
   input,
   mapping: {
@@ -121,6 +121,7 @@ createMobileControls({
     actionB: keys.drop,
     actionBLabel: "Drop",
   },
+  autoShow: false,
 });
 
 const keyLatch: Record<string, boolean> = {};
@@ -295,6 +296,7 @@ function startGame() {
     showOverlay("Config à compléter", "Crée configs/games/tetris.config.json", false);
     return;
   }
+  mobileControls.show();
   state.running = true;
   state.lines = 0;
   state.level = 1;
@@ -313,6 +315,7 @@ function startGame() {
 function endGame(win: boolean) {
   state.running = false;
   loop.stop();
+  mobileControls.hide();
   const eventType = win ? "SESSION_WIN" : "SESSION_FAIL";
   emitEvent({ type: eventType, gameId: GAME_ID, payload: { score: state.score, lines: state.lines } });
   if (config) {
@@ -437,6 +440,7 @@ function renderHUD() {
 }
 
 function showOverlay(title: string, body: string, showStart = true) {
+  mobileControls.hide();
   overlay.style.display = "grid";
   overlay.innerHTML = `
     <div class="panel">

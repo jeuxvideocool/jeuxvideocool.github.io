@@ -52,6 +52,20 @@ const controls = {
   dash: config?.input.keys.dash || "Space",
 };
 
+const mobileControls = createMobileControls({
+  container: document.body,
+  input,
+  mapping: {
+    up: controls.up,
+    down: controls.down,
+    left: controls.left,
+    right: controls.right,
+    actionA: controls.dash,
+    actionALabel: "Boost",
+  },
+  autoShow: false,
+});
+
 const difficultyPresets = {
   easy: {
     label: "Facile",
@@ -169,6 +183,7 @@ function startGame() {
     showOverlay("Config manquante", "Ajoute configs/games/snake.config.json", false);
     return;
   }
+  mobileControls.show();
   const preset = difficultyPresets[selectedDifficulty] || difficultyPresets.medium;
   state.boardSize = clamp(preset.boardSize, 12, 32);
   resize();
@@ -205,6 +220,7 @@ function startGame() {
 function endGame(win: boolean) {
   state.running = false;
   loop.stop();
+  mobileControls.hide();
   const score = state.score;
   const eventType = win ? "SESSION_WIN" : "SESSION_FAIL";
   emitEvent({ type: eventType, gameId: GAME_ID, payload: { score } });
@@ -493,6 +509,7 @@ function renderHUD() {
 }
 
 function showOverlay(title: string, body: string, showStart = true, lastScore?: number) {
+  mobileControls.hide();
   const preset = difficultyPresets[selectedDifficulty] || difficultyPresets.medium;
   overlay.style.display = "grid";
   overlay.innerHTML = `

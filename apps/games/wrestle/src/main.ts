@@ -79,7 +79,7 @@ const keys = {
   p2: config?.input.keys.p2Jump || "ArrowUp",
 };
 
-createMobileControls({
+const mobileControls = createMobileControls({
   container: document.body,
   input,
   mapping: {
@@ -88,6 +88,7 @@ createMobileControls({
     actionB: keys.p2,
     actionBLabel: "P2",
   },
+  autoShow: false,
 });
 
 function resize() {
@@ -242,6 +243,7 @@ function startGame() {
     showOverlay("Config à compléter", "Crée configs/games/wrestle.config.json", false);
     return;
   }
+  mobileControls.show();
   state.running = true;
   state.round += 1;
   state.winner = "";
@@ -255,6 +257,7 @@ function endGame(winnerLabel: string) {
   state.running = false;
   state.winner = winnerLabel;
   Runner.stop(runner);
+  mobileControls.hide();
   emitEvent({ type: "SESSION_WIN", gameId: GAME_ID, payload: { winner: winnerLabel } });
   emitEvent({ type: "SESSION_FAIL", gameId: GAME_ID, payload: { loser: winnerLabel === "P1" ? "P2" : "P1" } });
   updateGameState(GAME_ID, config?.saveSchemaVersion ?? 1, (game) => {
@@ -361,6 +364,7 @@ function renderHUD() {
 }
 
 function showOverlay(title: string, body: string, showStart = true) {
+  mobileControls.hide();
   overlay.style.display = "grid";
   overlay.innerHTML = `
     <div class="panel">
