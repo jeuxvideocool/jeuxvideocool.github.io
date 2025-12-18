@@ -35,6 +35,7 @@ ui.appendChild(overlay);
 type Obstacle = { x: number; y: number; size: number; speed: number };
 type Powerup = { x: number; y: number; size: number; duration: number };
 type Star = { x: number; y: number; size: number; speed: number; alpha: number };
+type Mode = "timed" | "endless";
 
 const playerImg = new Image();
 playerImg.src = new URL("../assets/player.svg", import.meta.url).href;
@@ -51,6 +52,8 @@ const state = {
   invulnerable: 0,
   dashIFrames: 0,
   time: 0,
+  mode: "timed" as Mode,
+  runDuration: config?.difficultyParams.winTimeSeconds ?? 60,
   spawnTimer: 0,
   powerupTimer: 0,
   obstacles: [] as Obstacle[],
@@ -81,6 +84,11 @@ function startGame() {
   if (!config) {
     showOverlay("Config introuvable", "Ajoute configs/games/dodge.config.json", false);
     return;
+  }
+  const durationInput = document.getElementById("run-duration") as HTMLInputElement | null;
+  if (durationInput && state.mode === "timed") {
+    const parsed = Math.max(10, Math.min(999, Number(durationInput.value) || state.runDuration));
+    state.runDuration = parsed;
   }
   state.running = true;
   state.player.x = state.width * 0.15;
@@ -123,6 +131,15 @@ function showOverlay(title: string, body: string, showStart = true) {
       <p class="pill">Dodge Rush</p>
       <h2>${title}</h2>
       <p>${body}</p>
+      <div class="mode-picker">
+        <label><input type="radio" name="mode" value="timed" ${state.mode === "timed" ? "checked" : ""}/> Mode chrono</label>
+        <label><input type="radio" name="mode" value="endless" ${state.mode === "endless" ? "checked" : ""}/> Mode infini</label>
+        <div class="timed-only" style="display:${state.mode === "timed" ? "block" : "none"}; margin-top:8px;">
+          <label>Durée (sec)
+            <input id="run-duration" type="number" min="10" max="999" value="${state.runDuration}" />
+          </label>
+        </div>
+      </div>
       <div style="display:flex; gap:10px; justify-content:center; margin-top:12px;">
         ${showStart ? `<button class="btn" id="play-btn">Lancer</button>` : ""}
         <a class="btn secondary" href="${withBasePath("/apps/hub/", import.meta.env.BASE_URL)}">Hub</a>
@@ -131,6 +148,7 @@ function showOverlay(title: string, body: string, showStart = true) {
   `;
   const play = document.getElementById("play-btn");
   play?.addEventListener("click", startGame);
+  wireModePicker();
 }
 
 showOverlay(config?.uiText.title || "Dodge Rush", config?.uiText.help || "");
@@ -232,7 +250,7 @@ function update(dt: number) {
     return p.x + p.size > 0;
   });
 
-  if (state.time >= config.difficultyParams.winTimeSeconds) {
+  if (state.mode === "timed" && state.time >= state.runDuration) {
     endGame(true);
   }
 }
@@ -293,6 +311,7 @@ function renderHUD() {
     <div class="pill">Temps ${state.time.toFixed(1)}s</div>
     <div class="pill">Dash ${Math.max(0, state.player.dashCooldown).toFixed(1)}s</div>
     <div class="pill">Invuln ${state.invulnerable.toFixed(1)}s</div>
+    <div class="pill">${state.mode === "endless" ? "Mode infini" : `Run ${state.runDuration}s`}</div>
   `;
   ui.appendChild(hud);
 }
@@ -315,4 +334,15 @@ function buildStars() {
     speed: rand(0.6, 1.6),
     alpha: rand(0.3, 0.8),
   }));
+}
+
+function wireModePicker() {
+  const modeRadios = overlay.querySelectorAll<HTMLInputElement>('input[name="mode"]');
+  modeRadios.forEach((r) =>
+    r.addEventListener("change", () => {
+      state.mode = (r.value as Mode) || "timed";
+      const timedOnly = overlay.querySelector<HTMLElement>(".timed-only");
+      if (timedOnly) timedOnly.style.display = state.mode === "timed" ? "block" : "none";
+    }),
+  );
 }
