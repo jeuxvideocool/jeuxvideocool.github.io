@@ -67,6 +67,7 @@ createMobileControls({
 
 type Bullet = { x: number; y: number; speed: number };
 type Enemy = { x: number; y: number; speed: number; vx: number };
+type Heart = { x: number; y: number; vy: number };
 
 const state = {
   running: false,
@@ -75,14 +76,18 @@ const state = {
   player: { x: 0, y: 0, r: 14 },
   bullets: [] as Bullet[],
   enemies: [] as Enemy[],
+  hearts: [] as Heart[],
   score: 0,
   combo: 0,
   comboTimer: 0,
   lastShot: 0,
+  fireCooldown: 0.28,
   spawnTimer: 0,
   wave: 1,
   waveTimer: config?.difficultyParams.waveLength ?? 30,
   lives: 3,
+  maxLives: 5,
+  maxWave: config?.difficultyParams.wavesToWin ?? 3,
 };
 
 function resize() {
@@ -114,12 +119,14 @@ function startGame() {
   state.player.y = state.height * 0.75;
   state.bullets = [];
   state.enemies = [];
+  state.hearts = [];
   state.score = 0;
   state.combo = 0;
   state.comboTimer = 0;
   state.spawnTimer = 0;
   state.wave = 1;
   state.waveTimer = config.difficultyParams.waveLength;
+  state.maxWave = config.difficultyParams.wavesToWin ?? 3;
   state.lives = 3;
   overlay.style.display = "none";
   emitEvent({ type: "SESSION_START", gameId: GAME_ID });
@@ -170,7 +177,7 @@ function update(dt: number) {
   if (state.waveTimer <= 0) {
     emitEvent({ type: "WAVE_CLEARED", gameId: GAME_ID });
     state.wave += 1;
-    if (state.wave > config.difficultyParams.wavesToWin) {
+    if (state.wave > state.maxWave) {
       endGame(true);
       return;
     }
@@ -192,7 +199,7 @@ function update(dt: number) {
 
   // Shooting
   const shootKey = controls.shoot;
-  if (isDownAny(shootKey, controls.altShoot) && state.lastShot > 0.18) {
+  if (isDownAny(shootKey, controls.altShoot) && state.lastShot > state.fireCooldown) {
     state.bullets.push({ x: state.player.x, y: state.player.y - 8, speed: config.difficultyParams.bulletSpeed });
     state.lastShot = 0;
   }
@@ -206,6 +213,15 @@ function update(dt: number) {
       y: -20,
       speed: config.difficultyParams.enemySpeed + state.wave * 0.2,
       vx: rand(-0.4, 0.4),
+    });
+  }
+
+  // Spawn hearts occasionally (rarer than enemies)
+  if (Math.random() < 0.0018 * dt * 60) {
+    state.hearts.push({
+      x: rand(20, state.width - 20),
+      y: -20,
+      vy: rand(0.6, 1.1),
     });
   }
 
@@ -223,11 +239,24 @@ function update(dt: number) {
     const dx = enemy.x - state.player.x;
     const dy = enemy.y - state.player.y;
     if (Math.sqrt(dx * dx + dy * dy) < state.player.r + 14) {
-      state.lives -= 1;
+      state.lives = Math.max(0, state.lives - 1);
       emitEvent({ type: "PLAYER_HIT", gameId: GAME_ID });
-      return state.lives > 0;
+      return false;
     }
     return enemy.y < state.height + 20;
+  });
+
+  // Hearts movement + pickup
+  state.hearts = state.hearts.filter((heart) => {
+    heart.y += heart.vy;
+    const dx = heart.x - state.player.x;
+    const dy = heart.y - state.player.y;
+    if (Math.sqrt(dx * dx + dy * dy) < state.player.r + 14) {
+      state.lives = Math.min(state.maxLives, state.lives + 1);
+      emitEvent({ type: "ITEM_COLLECTED", gameId: GAME_ID, payload: { type: "heart" } });
+      return false;
+    }
+    return heart.y < state.height + 30;
   });
 
   // Bullet/enemy collision
@@ -304,9 +333,9 @@ function renderHUD() {
   hud.className = "hud";
   hud.innerHTML = `
     <div class="pill">Score ${state.score}</div>
-    <div class="pill">Wave ${state.wave}/${config?.difficultyParams.wavesToWin ?? 0}</div>
+    <div class="pill">Wave ${state.wave}/${state.maxWave}</div>
     <div class="pill">Combo ${state.combo} (${state.comboTimer.toFixed(1)}s)</div>
-    <div class="pill">Vies ${state.lives}</div>
+    <div class="pill">Vies ${state.lives}/${state.maxLives}</div>
   `;
   ui.appendChild(hud);
 }
