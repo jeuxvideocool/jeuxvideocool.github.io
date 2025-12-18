@@ -163,7 +163,11 @@ function injectMobileStyles() {
       z-index: 30;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      padding: 12px;
+      align-items: end;
+      justify-items: stretch;
+      gap: 12px;
+      padding: 14px;
+      padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
       transition: opacity 0.25s ease, transform 0.25s ease;
     }
     .mobile-controls.hidden-desktop {
@@ -182,13 +186,14 @@ function injectMobileStyles() {
     .mobile-pad, .mobile-actions {
       pointer-events: all;
       align-self: end;
+      margin-bottom: env(safe-area-inset-bottom, 0px);
     }
     .mobile-pad {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(3, 1fr);
       gap: 6px;
-      width: 168px;
+      width: min(168px, 42vw);
       max-width: 36vw;
       justify-self: start;
       background: rgba(0, 0, 0, 0.2);
@@ -218,6 +223,17 @@ function injectMobileStyles() {
     .mobile-btn:active {
       transform: scale(0.96);
       background: linear-gradient(145deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
+    }
+    @media (max-height: 720px) {
+      .mobile-btn {
+        width: 46px;
+        height: 46px;
+        font-size: 14px;
+      }
+      .mobile-pad {
+        width: min(150px, 40vw);
+        padding: 8px;
+      }
     }
     .mobile-fs-btn {
       width: 54px;
@@ -339,7 +355,7 @@ export function createMobileControls(options: MobileControlsOptions) {
     input,
     mapping,
     showOnDesktop = false,
-    autoShow = true,
+    autoShow = false,
     showFullscreenToggle = true,
     showPad = false,
     gestureEnabled = true,

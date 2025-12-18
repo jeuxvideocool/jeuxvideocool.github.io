@@ -71,6 +71,8 @@ function ensureMobileControls() {
       actionA: controls.attack,
       actionALabel: "Frappe",
     },
+    autoShow: false,
+    showPad: false,
   });
 }
 
@@ -125,6 +127,7 @@ function startGame() {
     return;
   }
   ensureMobileControls();
+  mobileControls?.show();
   state.running = true;
   state.baseTime = config?.difficultyParams.timeLimitSeconds ?? 60;
   state.timeDecay = 5;
@@ -202,6 +205,7 @@ function spawnEnemies(count: number) {
 function endGame(win: boolean) {
   state.running = false;
   loop.stop();
+  mobileControls?.hide();
   mobileControls?.dispose();
   mobileControls = null;
   const eventType = win ? "QUEST_COMPLETE" : "SESSION_FAIL";
@@ -217,6 +221,7 @@ function endGame(win: boolean) {
 }
 
 function showOverlay(title: string, body: string, showStart = true) {
+  mobileControls?.hide();
   const description =
     body && body.trim().length
       ? body

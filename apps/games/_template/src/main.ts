@@ -44,7 +44,7 @@ const controls = {
   right: config?.input.keys.right || "ArrowRight",
 };
 
-createMobileControls({
+const mobileControls = createMobileControls({
   container: document.body,
   input,
   mapping: {
@@ -53,6 +53,8 @@ createMobileControls({
     left: controls.left,
     right: controls.right,
   },
+  autoShow: false,
+  showPad: false,
 });
 
 type Pickup = { x: number; y: number; collected: boolean };
@@ -87,6 +89,7 @@ function startGame() {
     showOverlay("Config à compléter", "Crée configs/games/<id>.config.json", false);
     return;
   }
+  mobileControls.show();
   state.running = true;
   state.player.x = state.width / 2;
   state.player.y = state.height / 2;
@@ -119,6 +122,7 @@ function endGame(win: boolean) {
 }
 
 function showOverlay(title: string, body: string, showStart = true) {
+  mobileControls.hide();
   overlay.style.display = "grid";
   overlay.innerHTML = `
     <div class="panel">
