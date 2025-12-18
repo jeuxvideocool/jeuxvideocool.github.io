@@ -1,0 +1,14 @@
+{
+  "id": "asphalt",
+  "name": "Asphalt Neon",
+  "colors": {
+    "primary": "#ff6b6b",
+    "secondary": "#ffd166",
+    "accent": "#64f4ac",
+    "background": "#050710",
+    "surface": "#0d1224",
+    "text": "#f5f7ff",
+    "muted": "#8fa1c3"
+  },
+  "gradient": "linear-gradient(145deg, #050710 0%, #0d162c 40%, #ff6b6b 100%)"
+}

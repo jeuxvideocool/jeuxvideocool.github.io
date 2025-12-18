@@ -9,6 +9,16 @@
     { "level": 7, "requiredXP": 1800 },
     { "level": 8, "requiredXP": 2400 },
     { "level": 9, "requiredXP": 3100 },
-    { "level": 10, "requiredXP": 3900 }
+    { "level": 10, "requiredXP": 3900 },
+    { "level": 11, "requiredXP": 4800 },
+    { "level": 12, "requiredXP": 5800 },
+    { "level": 13, "requiredXP": 6900 },
+    { "level": 14, "requiredXP": 8100 },
+    { "level": 15, "requiredXP": 9400 },
+    { "level": 16, "requiredXP": 10800 },
+    { "level": 17, "requiredXP": 12300 },
+    { "level": 18, "requiredXP": 13900 },
+    { "level": 19, "requiredXP": 15600 },
+    { "level": 20, "requiredXP": 17400 }
   ]
 }

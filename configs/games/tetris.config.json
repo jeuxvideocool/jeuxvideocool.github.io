@@ -1,0 +1,34 @@
+{
+  "id": "tetris",
+  "saveSchemaVersion": 1,
+  "themeId": "grid",
+  "xpRules": {
+    "SESSION_START": 3,
+    "LINES_CLEARED": 6,
+    "TETRIS_CLEAR": 24,
+    "SESSION_WIN": 70,
+    "SESSION_FAIL": 10
+  },
+  "uiText": {
+    "title": "Tetris Mini",
+    "shortDescription": "Déplace, rotate, drop. Nettoie les lignes et vise le Tetris.",
+    "help": "Empile sans atteindre le plafond. Flèches pour bouger/rotate, Espace pour hard drop. Les lignes nettoyées accélèrent le jeu.",
+    "controls": ["Flèches gauche/droite pour bouger", "Flèche haut pour rotation", "Flèche bas pour descente douce", "Espace pour hard drop"]
+  },
+  "difficultyParams": {
+    "dropIntervalMs": 780,
+    "speedUpFactor": 0.9,
+    "linesToWin": 24,
+    "boardWidth": 10,
+    "boardHeight": 20
+  },
+  "input": {
+    "keys": {
+      "left": "ArrowLeft",
+      "right": "ArrowRight",
+      "down": "ArrowDown",
+      "rotate": "ArrowUp",
+      "drop": "Space"
+    }
+  }
+}

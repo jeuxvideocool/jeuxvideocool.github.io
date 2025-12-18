@@ -1,0 +1,36 @@
+{
+  "id": "drive",
+  "saveSchemaVersion": 1,
+  "themeId": "asphalt",
+  "xpRules": {
+    "SESSION_START": 3,
+    "SESSION_WIN": 50,
+    "SESSION_FAIL": 12,
+    "OBSTACLE_DODGED": 4,
+    "ITEM_COLLECTED": 6,
+    "BOOST_USED": 3
+  },
+  "uiText": {
+    "title": "Neon Drive",
+    "shortDescription": "Course infinie, évite le trafic et prends les boosts.",
+    "help": "Déplace-toi sur 3 voies, ramasse les batteries et évite les voitures ennemies. Un boost te rend invulnérable quelques secondes.",
+    "controls": ["Flèches gauche/droite pour changer de voie", "Flèche haut pour activer le boost"]
+  },
+  "difficultyParams": {
+    "laneCount": 3,
+    "roadLength": 9999,
+    "trafficSpawnMs": 950,
+    "trafficSpeed": 220,
+    "trafficSpeedVariance": 40,
+    "boostDurationMs": 2600,
+    "boostCooldownMs": 4200,
+    "pickupSpawnMs": 1800
+  },
+  "input": {
+    "keys": {
+      "left": "ArrowLeft",
+      "right": "ArrowRight",
+      "boost": "ArrowUp"
+    }
+  }
+}

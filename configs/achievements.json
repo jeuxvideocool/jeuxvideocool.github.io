@@ -55,6 +55,54 @@
       "icon": "🔥",
       "condition": { "type": "streak", "event": "SESSION_WIN", "count": 3 },
       "rewardXP": 70
+    },
+    {
+      "id": "line-rookie",
+      "title": "Lignes claires",
+      "description": "Détruis 20 lignes dans Tetris Mini.",
+      "icon": "🧱",
+      "condition": { "type": "eventCount", "event": "LINES_CLEARED", "count": 20 },
+      "rewardXP": 45
+    },
+    {
+      "id": "tetris-master",
+      "title": "Carré parfait",
+      "description": "Réalise 3 Tetris (4 lignes d'un coup).",
+      "icon": "🧠",
+      "condition": { "type": "eventCount", "event": "TETRIS_CLEAR", "count": 3 },
+      "rewardXP": 80
+    },
+    {
+      "id": "combo-shooter",
+      "title": "Chasseur infatigable",
+      "description": "Élimine 150 drones dans Pixel Shooter.",
+      "icon": "💥",
+      "condition": { "type": "eventCount", "event": "ENEMY_KILLED", "count": 150 },
+      "rewardXP": 90
+    },
+    {
+      "id": "night-runner",
+      "title": "Marathon spatial",
+      "description": "Joue 25 sessions au total.",
+      "icon": "🌌",
+      "condition": { "type": "eventCount", "event": "SESSION_START", "count": 25 },
+      "rewardXP": 65
+    },
+    {
+      "id": "xp-hoarder",
+      "title": "Capitaine XP",
+      "description": "Atteins 2500 XP globaux.",
+      "icon": "🪐",
+      "condition": { "type": "xpReached", "xp": 2500 },
+      "rewardXP": 120
+    },
+    {
+      "id": "completionist",
+      "title": "Tous les jeux",
+      "description": "Teste les 4 jeux au moins une fois.",
+      "icon": "🎮",
+      "condition": { "type": "gamesPlayed", "count": 4 },
+      "rewardXP": 90
     }
   ]
 }

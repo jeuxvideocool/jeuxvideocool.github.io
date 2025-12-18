@@ -1,0 +1,14 @@
+{
+  "id": "grid",
+  "name": "Cyber Grid",
+  "colors": {
+    "primary": "#7af0ff",
+    "secondary": "#7c7bff",
+    "accent": "#ffb347",
+    "background": "#050912",
+    "surface": "#0c1224",
+    "text": "#f4f8ff",
+    "muted": "#9bb0ce"
+  },
+  "gradient": "linear-gradient(145deg, #050912 0%, #0c1630 40%, #0bd0ff 100%)"
+}

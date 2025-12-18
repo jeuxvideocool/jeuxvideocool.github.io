@@ -30,6 +30,26 @@
       "previewEmoji": "🗺️",
       "order": 3,
       "lastUpdated": "2024-03-01"
+    },
+    {
+      "id": "tetris",
+      "title": "Tetris Mini",
+      "description": "Empile les pièces, nettoie les lignes et enchaîne les Tetris.",
+      "tags": ["puzzle", "arcade"],
+      "themeId": "grid",
+      "previewEmoji": "🧩",
+      "order": 4,
+      "lastUpdated": "2024-06-01"
+    },
+    {
+      "id": "drive",
+      "title": "Neon Drive",
+      "description": "Course infinie, boosts et trafic serré.",
+      "tags": ["arcade", "voiture"],
+      "themeId": "asphalt",
+      "previewEmoji": "🚗",
+      "order": 5,
+      "lastUpdated": "2024-06-02"
     }
   ]
 }
