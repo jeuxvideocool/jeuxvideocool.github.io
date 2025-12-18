@@ -68,6 +68,8 @@ const state = {
   round: 1,
   winner: "",
   decor: [] as { x: number; y: number; r: number; alpha: number }[],
+  spotlights: [] as { x: number; y: number; w: number; h: number; alpha: number }[],
+  grounded: new Map<string, number>(),
 };
 
 const keys = {
@@ -135,6 +137,7 @@ function createFighter(x: number, label: string, img: HTMLImageElement, color: s
 
 function buildWorld() {
   World.clear(engine.world, false);
+  state.grounded.clear();
   const ground = Bodies.rectangle(state.width / 2, state.height - 20, state.width, 40, {
     isStatic: true,
     label: "ground",
@@ -175,9 +178,17 @@ function buildWorld() {
     r: rand(30, 80),
     alpha: rand(0.08, 0.2),
   }));
+  state.spotlights = Array.from({ length: 6 }, () => ({
+    x: rand(state.width * 0.18, state.width * 0.82),
+    y: rand(state.height * 0.18, state.height * 0.3),
+    w: rand(4, 8),
+    h: rand(80, 140),
+    alpha: rand(0.08, 0.14),
+  }));
 }
 
 function jump(fighter: Fighter) {
+  if (!isGrounded(fighter)) return;
   const jumpForce = config?.difficultyParams.jumpForce ?? 0.08;
   const boostForce = config?.difficultyParams.boostForce ?? 0.12;
   const forceY = jumpForce + (fighter.head.position.y > fighter.body.position.y ? boostForce : 0);
@@ -196,6 +207,8 @@ function detectHeadHit() {
   Events.on(engine, "collisionStart", (evt) => {
     evt.pairs.forEach((pair) => {
       const labels = [pair.bodyA.label, pair.bodyB.label];
+      trackGrounded(pair.bodyA, pair.bodyB, true);
+      trackGrounded(pair.bodyB, pair.bodyA, true);
       const isGround = labels.includes("ground");
       if (!isGround) return;
       const head = pair.bodyA.label.includes("head") ? pair.bodyA : pair.bodyB.label.includes("head") ? pair.bodyB : null;
@@ -205,6 +218,12 @@ function detectHeadHit() {
       if (!state.running) return;
       emitEvent({ type: "HEAD_HIT", gameId: GAME_ID, payload: { loser } });
       endGame(winner);
+    });
+  });
+  Events.on(engine, "collisionEnd", (evt) => {
+    evt.pairs.forEach((pair) => {
+      trackGrounded(pair.bodyA, pair.bodyB, false);
+      trackGrounded(pair.bodyB, pair.bodyA, false);
     });
   });
 }
@@ -258,6 +277,13 @@ function render() {
     ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
     ctx.fill();
   });
+  state.spotlights.forEach((s) => {
+    const grd = ctx.createLinearGradient(s.x, s.y, s.x, s.y + s.h);
+    grd.addColorStop(0, `rgba(255,255,255,${s.alpha})`);
+    grd.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = grd;
+    ctx.fillRect(s.x - s.w / 2, s.y, s.w, s.h);
+  });
 
   const drawFighter = (f: Fighter) => {
     drawBody(f.body, f.img, f.color);
@@ -280,6 +306,7 @@ function render() {
   ctx.restore();
   renderHUD();
   if (state.running) {
+    clampFightersInRing();
     handleInput();
     requestAnimationFrame(render);
   }
@@ -347,3 +374,37 @@ function showOverlay(title: string, body: string, showStart = true) {
 
 detectHeadHit();
 showOverlay(config?.uiText.title || "Rope Wrestle", config?.uiText.help || "");
+
+function isFighterPart(body: Matter.Body) {
+  return body.label.startsWith("p1") || body.label.startsWith("p2");
+}
+
+function trackGrounded(a: Matter.Body, b: Matter.Body, entering: boolean) {
+  if (!isFighterPart(a) || b.label !== "ground") return;
+  const key = a.label.slice(0, 2); // p1 or p2
+  const current = state.grounded.get(key) || 0;
+  state.grounded.set(key, entering ? current + 1 : Math.max(0, current - 1));
+}
+
+function isGrounded(fighter: Fighter) {
+  const key = fighter.label.slice(0, 2);
+  const groundedCount = state.grounded.get(key) || 0;
+  return groundedCount > 0;
+}
+
+function clampFightersInRing() {
+  const minX = state.width * 0.12;
+  const maxX = state.width * 0.88;
+  const minY = state.height * 0.18;
+  const maxY = state.height - 30;
+  state.fighters.forEach((f) => {
+    [f.body, f.head, f.hand].forEach((part) => {
+      const x = clamp(part.position.x, minX, maxX);
+      const y = clamp(part.position.y, minY, maxY);
+      if (x !== part.position.x || y !== part.position.y) {
+        Body.setPosition(part, { x, y });
+        Body.setVelocity(part, { x: 0, y: 0 });
+      }
+    });
+  });
+}

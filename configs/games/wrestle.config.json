@@ -16,10 +16,10 @@
     "controls": ["P1 : W pour sauter", "P2 : Flèche haut pour sauter"]
   },
   "difficultyParams": {
-    "jumpForce": 0.045,
-    "boostForce": 0.07,
-    "gravity": 1.2,
-    "ropeStiffness": 0.65
+    "jumpForce": 0.03,
+    "boostForce": 0.05,
+    "gravity": 1.25,
+    "ropeStiffness": 0.7
   },
   "input": {
     "keys": {
