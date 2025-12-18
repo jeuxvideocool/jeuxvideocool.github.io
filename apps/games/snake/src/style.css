@@ -127,6 +127,7 @@ body {
   pointer-events: all;
   padding: 18px;
   overflow: auto;
+  z-index: 4;
 }
 
 .panel {

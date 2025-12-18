@@ -216,6 +216,7 @@ function startGame() {
   state.boostSeconds = preset.boostSeconds;
   spawnFood();
   overlay.style.display = "none";
+  ui.style.pointerEvents = "none";
   emitEvent({ type: "SESSION_START", gameId: GAME_ID });
   loop.start();
 }
@@ -492,6 +493,7 @@ function render() {
 function renderHUD() {
   ui.innerHTML = "";
   ui.appendChild(overlay);
+  ui.style.pointerEvents = overlay.style.display === "none" ? "none" : "auto";
   const hudTop = document.createElement("div");
   hudTop.className = "hud";
   hudTop.innerHTML = `
@@ -515,6 +517,7 @@ function showOverlay(title: string, body: string, showStart = true, lastScore?: 
   mobileControls.hide();
   const preset = difficultyPresets[selectedDifficulty] || difficultyPresets.medium;
   overlay.style.display = "grid";
+  ui.style.pointerEvents = "auto";
   overlay.innerHTML = `
     <div class="panel">
       <p class="pill">Prism Snake · ${preset.label}</p>
