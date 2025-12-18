@@ -5,8 +5,19 @@ export type KeyboardInput = {
 
 export function createKeyboardInput(): KeyboardInput {
   const pressed = new Set<string>();
-  const onDown = (e: KeyboardEvent) => pressed.add(e.code);
-  const onUp = (e: KeyboardEvent) => pressed.delete(e.code);
+  const preventCodes = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"]);
+  const onDown = (e: KeyboardEvent) => {
+    if (preventCodes.has(e.code)) {
+      e.preventDefault();
+    }
+    pressed.add(e.code);
+  };
+  const onUp = (e: KeyboardEvent) => {
+    if (preventCodes.has(e.code)) {
+      e.preventDefault();
+    }
+    pressed.delete(e.code);
+  };
   window.addEventListener("keydown", onDown);
   window.addEventListener("keyup", onUp);
   return {
