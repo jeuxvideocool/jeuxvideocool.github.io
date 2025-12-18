@@ -43,6 +43,14 @@ overlay.className = "overlay";
 overlay.style.display = "none";
 ui.appendChild(overlay);
 
+const CHASE_OFF = 10;
+const CHASE_ON = 3;
+let mobileControls:
+  | {
+      dispose: () => void;
+    }
+  | null = null;
+
 const controls = {
   up: config?.input.keys.up || "ArrowUp",
   down: config?.input.keys.down || "ArrowDown",
@@ -50,19 +58,21 @@ const controls = {
   right: config?.input.keys.right || "ArrowRight",
   attack: (config as any)?.input?.keys?.attack || (config as any)?.input?.keys?.interact || "Space",
 };
-
-createMobileControls({
-  container: document.body,
-  input,
-  mapping: {
-    up: controls.up,
-    down: controls.down,
-    left: controls.left,
-    right: controls.right,
-    actionA: controls.attack,
-    actionALabel: "Frappe",
-  },
-});
+function ensureMobileControls() {
+  if (mobileControls) return;
+  mobileControls = createMobileControls({
+    container: document.body,
+    input,
+    mapping: {
+      up: controls.up,
+      down: controls.down,
+      left: controls.left,
+      right: controls.right,
+      actionA: controls.attack,
+      actionALabel: "Frappe",
+    },
+  });
+}
 
 type Point = { x: number; y: number };
 type Item = Point & { collected: boolean };
@@ -114,6 +124,7 @@ function startGame() {
     showOverlay("Config manquante", "Ajoute configs/games/quest.config.json", false);
     return;
   }
+  ensureMobileControls();
   state.running = true;
   state.baseTime = config?.difficultyParams.timeLimitSeconds ?? 60;
   state.timeDecay = 5;
@@ -191,6 +202,8 @@ function spawnEnemies(count: number) {
 function endGame(win: boolean) {
   state.running = false;
   loop.stop();
+  mobileControls?.dispose();
+  mobileControls = null;
   const eventType = win ? "QUEST_COMPLETE" : "SESSION_FAIL";
   emitEvent({ type: eventType, gameId: GAME_ID, payload: { remaining: state.timer } });
   updateGameState(GAME_ID, config?.saveSchemaVersion ?? 1, (game) => {
@@ -234,12 +247,10 @@ function update(dt: number) {
   state.invulnerable = Math.max(0, state.invulnerable - dt);
   state.attackTimer = Math.max(0, state.attackTimer - dt);
   state.chaseTimer += dt;
-  const chaseOff = 10;
-  const chaseOn = 3;
-  if (state.chaseActive && state.chaseTimer >= chaseOn) {
+  if (state.chaseActive && state.chaseTimer >= CHASE_ON) {
     state.chaseActive = false;
     state.chaseTimer = 0;
-  } else if (!state.chaseActive && state.chaseTimer >= chaseOff) {
+  } else if (!state.chaseActive && state.chaseTimer >= CHASE_OFF) {
     state.chaseActive = true;
     state.chaseTimer = 0;
   }
@@ -426,6 +437,18 @@ function render() {
     ctx.fill();
   }
 
+  // Chase alert ring
+  const timeToChase = CHASE_OFF - state.chaseTimer;
+  if (!state.chaseActive && timeToChase <= 2) {
+    const intensity = clamp(1 - timeToChase / 2, 0, 1);
+    const pulse = 1 + Math.sin(performance.now() / 180) * 0.15;
+    ctx.strokeStyle = `rgba(255, 96, 132, ${0.35 + intensity * 0.5})`;
+    ctx.lineWidth = 3 + intensity * 2;
+    ctx.beginPath();
+    ctx.arc(state.player.x, state.player.y, (playerSize * 0.65) * (1 + intensity * 0.35) * pulse, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
   ctx.restore();
   renderHUD();
 }
@@ -435,13 +458,15 @@ function renderHUD() {
   ui.appendChild(overlay);
   const hud = document.createElement("div");
   hud.className = "hud";
+  const timeToChase = CHASE_OFF - state.chaseTimer;
+  const chaseLabel = state.chaseActive ? "Chasse en cours" : timeToChase <= 2 ? "Chasse imminente" : "Repérage";
   hud.innerHTML = `
     <div class="pill">Niveau ${state.level}</div>
     <div class="pill">Temps ${state.timer.toFixed(1)}s</div>
     <div class="pill">Objets ${state.collected}/${state.items.length}</div>
     <div class="pill">Porte ${state.gate.open ? "ouverte" : "fermée"}</div>
     <div class="pill">Ennemis ${state.enemies.length}</div>
-    <div class="pill">${state.chaseActive ? "Chasse en cours" : "Repérage"}</div>
+    <div class="pill">${chaseLabel}</div>
   `;
   ui.appendChild(hud);
 }
