@@ -66,6 +66,7 @@ const mobileControls = createMobileControls({
   autoShow: false,
   showPad: true,
   gestureEnabled: false,
+  showOnDesktop: false,
 });
 
 const difficultyPresets = {
@@ -520,7 +521,7 @@ function showOverlay(title: string, body: string, showStart = true, lastScore?: 
       <h2>${title}</h2>
       ${lastScore !== undefined ? `<p class="muted">Score ${lastScore} · Longueur ${state.snake.length}</p>` : ""}
       <p class="muted">${body}</p>
-      <div class="panel-actions" style="flex-wrap:wrap; justify-content:center;">
+      <div class="panel-actions panel-actions-scroll" style="justify-content:flex-start;">
         ${Object.entries(difficultyPresets)
           .map(
             ([key, preset]) => `

@@ -352,7 +352,6 @@ export function createMobileControls(options: MobileControlsOptions) {
   if (!autoShow) {
     root.classList.add("mc-hidden");
   }
-  root.style.display = autoShow ? "grid" : "none";
 
   const pad = document.createElement("div");
   pad.className = "mobile-pad";
@@ -428,7 +427,6 @@ export function createMobileControls(options: MobileControlsOptions) {
 
   const updateVisibility = (visible: boolean) => {
     root.classList.toggle("mc-hidden", !visible);
-    root.style.display = visible ? "grid" : "none";
     if (gestureEl) {
       gestureEl.style.display = visible ? "block" : "none";
       gestureEl.style.pointerEvents = visible ? "all" : "none";
