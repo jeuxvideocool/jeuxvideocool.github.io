@@ -19,6 +19,10 @@ const enemyImg = new Image();
 enemyImg.src = new URL("../assets/enemy.svg", import.meta.url).href;
 const bulletImg = new Image();
 bulletImg.src = new URL("../assets/bullet.svg", import.meta.url).href;
+const heartImg = new Image();
+heartImg.src = new URL("../assets/heart.svg", import.meta.url).href;
+const boostImg = new Image();
+boostImg.src = new URL("../assets/boost.svg", import.meta.url).href;
 
 if (theme) {
   const root = document.documentElement.style;
@@ -68,6 +72,7 @@ createMobileControls({
 type Bullet = { x: number; y: number; speed: number };
 type Enemy = { x: number; y: number; speed: number; vx: number };
 type Heart = { x: number; y: number; vy: number };
+type Boost = { x: number; y: number; vy: number; duration: number };
 
 const state = {
   running: false,
@@ -77,11 +82,13 @@ const state = {
   bullets: [] as Bullet[],
   enemies: [] as Enemy[],
   hearts: [] as Heart[],
+  boosts: [] as Boost[],
   score: 0,
   combo: 0,
   comboTimer: 0,
   lastShot: 0,
   fireCooldown: 0.28,
+  cooldownPaused: 0,
   spawnTimer: 0,
   wave: 1,
   waveTimer: config?.difficultyParams.waveLength ?? 30,
@@ -116,10 +123,11 @@ function startGame() {
   }
   state.running = true;
   state.player.x = state.width / 2;
-  state.player.y = state.height * 0.75;
+  state.player.y = state.height * 0.78;
   state.bullets = [];
   state.enemies = [];
   state.hearts = [];
+  state.boosts = [];
   state.score = 0;
   state.combo = 0;
   state.comboTimer = 0;
@@ -128,6 +136,7 @@ function startGame() {
   state.waveTimer = config.difficultyParams.waveLength;
   state.maxWave = config.difficultyParams.wavesToWin ?? 3;
   state.lives = 3;
+  state.cooldownPaused = 0;
   overlay.style.display = "none";
   emitEvent({ type: "SESSION_START", gameId: GAME_ID });
   loop.start();
@@ -170,6 +179,7 @@ showOverlay(config?.uiText.title || "Pixel Shooter", config?.uiText.help || "");
 function update(dt: number) {
   if (!state.running || !config) return;
   state.lastShot += dt;
+  state.cooldownPaused = Math.max(0, state.cooldownPaused - dt);
   state.spawnTimer += dt * 1000;
   state.comboTimer = Math.max(0, state.comboTimer - dt);
   if (state.comboTimer <= 0) state.combo = 0;
@@ -189,18 +199,19 @@ function update(dt: number) {
   const moveX =
     (isDownAny(controls.right, controls.altRight, "KeyD") ? 1 : 0) +
     (isDownAny(controls.left, controls.altLeft, "KeyQ", "KeyA") ? -1 : 0);
-  const moveY =
-    (isDownAny(controls.down, controls.altDown, "KeyS") ? 1 : 0) +
-    (isDownAny(controls.up, controls.altUp, "KeyZ", "KeyW") ? -1 : 0);
   state.player.x += moveX * config.difficultyParams.playerSpeed * (dt * 60);
-  state.player.y += moveY * config.difficultyParams.playerSpeed * (dt * 60);
   state.player.x = clamp(state.player.x, state.player.r, state.width - state.player.r);
-  state.player.y = clamp(state.player.y, state.height * 0.35, state.height - state.player.r);
+  state.player.y = state.height * 0.78;
 
   // Shooting
   const shootKey = controls.shoot;
-  if (isDownAny(shootKey, controls.altShoot) && state.lastShot > state.fireCooldown) {
-    state.bullets.push({ x: state.player.x, y: state.player.y - 8, speed: config.difficultyParams.bulletSpeed });
+  const cooldown = state.cooldownPaused > 0 ? 0 : state.fireCooldown;
+  if (isDownAny(shootKey, controls.altShoot) && state.lastShot > cooldown) {
+    state.bullets.push({
+      x: state.player.x,
+      y: state.player.y - 8,
+      speed: config.difficultyParams.bulletSpeed,
+    });
     state.lastShot = 0;
   }
 
@@ -222,6 +233,16 @@ function update(dt: number) {
       x: rand(20, state.width - 20),
       y: -20,
       vy: rand(0.6, 1.1),
+    });
+  }
+
+  // Spawn cooldown boosts (rarer)
+  if (Math.random() < 0.001 * dt * 60) {
+    state.boosts.push({
+      x: rand(20, state.width - 20),
+      y: -20,
+      vy: rand(0.7, 1.2),
+      duration: rand(2, 10),
     });
   }
 
@@ -259,6 +280,19 @@ function update(dt: number) {
     return heart.y < state.height + 30;
   });
 
+  // Boosts movement + pickup (pause cooldown)
+  state.boosts = state.boosts.filter((boost) => {
+    boost.y += boost.vy;
+    const dx = boost.x - state.player.x;
+    const dy = boost.y - state.player.y;
+    if (Math.sqrt(dx * dx + dy * dy) < state.player.r + 14) {
+      state.cooldownPaused = Math.max(state.cooldownPaused, boost.duration);
+      emitEvent({ type: "ITEM_COLLECTED", gameId: GAME_ID, payload: { type: "cooldown" } });
+      return false;
+    }
+    return boost.y < state.height + 30;
+  });
+
   // Bullet/enemy collision
   for (let i = state.enemies.length - 1; i >= 0; i--) {
     const enemy = state.enemies[i];
@@ -276,6 +310,36 @@ function update(dt: number) {
         if (state.combo > 0 && state.combo % 5 === 0) {
           emitEvent({ type: "COMBO_REACHED", gameId: GAME_ID, payload: { combo: state.combo } });
         }
+        break;
+      }
+    }
+  }
+
+  // Bullet/heart collision (destroy heart without heal)
+  for (let i = state.hearts.length - 1; i >= 0; i--) {
+    const heart = state.hearts[i];
+    for (let j = state.bullets.length - 1; j >= 0; j--) {
+      const b = state.bullets[j];
+      const dx = heart.x - b.x;
+      const dy = heart.y - b.y;
+      if (Math.sqrt(dx * dx + dy * dy) < 18) {
+        state.hearts.splice(i, 1);
+        state.bullets.splice(j, 1);
+        break;
+      }
+    }
+  }
+
+  // Bullet/boost collision (destroy without effect)
+  for (let i = state.boosts.length - 1; i >= 0; i--) {
+    const boost = state.boosts[i];
+    for (let j = state.bullets.length - 1; j >= 0; j--) {
+      const b = state.bullets[j];
+      const dx = boost.x - b.x;
+      const dy = boost.y - b.y;
+      if (Math.sqrt(dx * dx + dy * dy) < 18) {
+        state.boosts.splice(i, 1);
+        state.bullets.splice(j, 1);
         break;
       }
     }
@@ -322,6 +386,30 @@ function render() {
     }
   });
 
+  // Hearts
+  state.hearts.forEach((h) => {
+    if (heartImg.complete) {
+      ctx.drawImage(heartImg, h.x - 14, h.y - 12, 28, 24);
+    } else {
+      ctx.fillStyle = "#ff7ee2";
+      ctx.beginPath();
+      ctx.arc(h.x, h.y, 10, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  });
+
+  // Boosts
+  state.boosts.forEach((b) => {
+    if (boostImg.complete) {
+      ctx.drawImage(boostImg, b.x - 14, b.y - 14, 28, 28);
+    } else {
+      ctx.fillStyle = "#7cffe1";
+      ctx.beginPath();
+      ctx.rect(b.x - 12, b.y - 12, 24, 24);
+      ctx.fill();
+    }
+  });
+
   ctx.restore();
   renderHUD();
 }
@@ -336,6 +424,11 @@ function renderHUD() {
     <div class="pill">Wave ${state.wave}/${state.maxWave}</div>
     <div class="pill">Combo ${state.combo} (${state.comboTimer.toFixed(1)}s)</div>
     <div class="pill">Vies ${state.lives}/${state.maxLives}</div>
+    ${
+      state.cooldownPaused > 0
+        ? `<div class="pill">Cooldown off ${state.cooldownPaused.toFixed(1)}s</div>`
+        : ""
+    }
   `;
   ui.appendChild(hud);
 }
