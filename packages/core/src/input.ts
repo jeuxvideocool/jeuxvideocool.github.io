@@ -198,6 +198,21 @@ function injectMobileStyles() {
       transform: scale(0.96);
       background: linear-gradient(145deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
     }
+    .mobile-gesture {
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      width: 55vw;
+      height: 60vh;
+      pointer-events: all;
+      touch-action: none;
+      z-index: 29;
+    }
+    @media (min-width: 1025px) {
+      .mobile-gesture {
+        display: none;
+      }
+    }
   `;
   document.head.appendChild(style);
 }
@@ -213,6 +228,73 @@ function createBtn(label: string, code: string | undefined, input: HybridInput) 
     btn.disabled = true;
   }
   return btn;
+}
+
+function bindGestureZone(
+  zone: HTMLElement,
+  mapping: { up?: string; down?: string; left?: string; right?: string },
+  input: HybridInput,
+) {
+  const dir = { x: 0, y: 0 };
+  let active = false;
+  let start = { x: 0, y: 0 };
+  const threshold = 10;
+
+  const release = () => {
+    ["up", "down", "left", "right"].forEach((key) => {
+      const code = (mapping as any)[key];
+      if (code) input.release(code);
+    });
+  };
+
+  const apply = (dx: number, dy: number) => {
+    release();
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+    if (absX < threshold && absY < threshold) return;
+    if (absX > absY) {
+      if (dx > 0 && mapping.right) input.press(mapping.right);
+      if (dx < 0 && mapping.left) input.press(mapping.left);
+    } else {
+      if (dy > 0 && mapping.down) input.press(mapping.down);
+      if (dy < 0 && mapping.up) input.press(mapping.up);
+    }
+  };
+
+  const onDown = (e: PointerEvent) => {
+    e.preventDefault();
+    active = true;
+    start = { x: e.clientX, y: e.clientY };
+  };
+  const onMove = (e: PointerEvent) => {
+    if (!active) return;
+    e.preventDefault();
+    if (!active) return;
+    dir.x = e.clientX - start.x;
+    dir.y = e.clientY - start.y;
+    apply(dir.x, dir.y);
+  };
+  const onUp = () => {
+    active = false;
+    dir.x = 0;
+    dir.y = 0;
+    release();
+  };
+
+  zone.addEventListener("pointerdown", onDown, { passive: false });
+  zone.addEventListener("pointermove", onMove, { passive: false });
+  zone.addEventListener("pointerup", onUp, { passive: false });
+  zone.addEventListener("pointercancel", onUp, { passive: false });
+  zone.addEventListener("pointerleave", onUp, { passive: false });
+
+  return () => {
+    zone.removeEventListener("pointerdown", onDown);
+    zone.removeEventListener("pointermove", onMove);
+    zone.removeEventListener("pointerup", onUp);
+    zone.removeEventListener("pointercancel", onUp);
+    zone.removeEventListener("pointerleave", onUp);
+    release();
+  };
 }
 
 export function createMobileControls(options: MobileControlsOptions) {
@@ -254,19 +336,31 @@ export function createMobileControls(options: MobileControlsOptions) {
 
   const hasPad = Boolean(mapping.up || mapping.down || mapping.left || mapping.right);
   const hasActions = Boolean(actionA || actionB);
+  const hasDirections = hasPad;
 
   if (hasPad) root.appendChild(pad);
   if (hasActions) root.appendChild(actions);
 
-  if (!hasPad && !hasActions) {
-    return { dispose: () => {} };
+  let gestureCleanup: (() => void) | undefined;
+  let gestureEl: HTMLDivElement | undefined;
+  if (hasDirections) {
+    gestureEl = document.createElement("div");
+    gestureEl.className = "mobile-gesture";
+    container.appendChild(gestureEl);
+    gestureCleanup = bindGestureZone(gestureEl, mapping, input);
   }
 
-  container.appendChild(root);
+  if (hasPad || hasActions) {
+    container.appendChild(root);
+  }
 
   return {
     dispose() {
       root.remove();
+      if (gestureEl?.parentElement) {
+        gestureEl.remove();
+      }
+      gestureCleanup?.();
     },
   };
 }

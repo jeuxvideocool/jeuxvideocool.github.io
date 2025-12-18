@@ -334,6 +334,9 @@ function renderGameGrid() {
     })
     .join("");
 
+  const filterActive = favoritesOnly || categoryFilter !== "all" || Boolean(normalizedSearch);
+  const matchCount = filtered.length;
+
   const errorBox = errors.length
     ? `<div class="alert">Configs manquantes : ${errors.join(", ")}</div>`
     : "";
@@ -347,18 +350,35 @@ function renderGameGrid() {
         </div>
       </div>
       <div class="filters">
-        <label class="filter search">
-          <input id="search-games" type="text" placeholder="Rechercher par nom..." value="${safeSearch}" />
-        </label>
-        <label class="filter">
-          <select id="category-filter">
-            <option value="all">Toutes les catégories</option>
-            ${categories.map((cat) => `<option value="${cat}" ${cat === categoryFilter ? "selected" : ""}>${cat}</option>`).join("")}
-          </select>
-        </label>
-        <button class="btn ghost filter-toggle ${favoritesOnly ? "active" : ""}" id="filter-fav">
-          ${favoritesOnly ? "★" : "☆"} Favoris
-        </button>
+        <div class="filter search">
+          <span class="search-icon">🔎</span>
+          <input
+            id="search-games"
+            type="text"
+            placeholder="Rechercher un jeu par nom ou description…"
+            value="${safeSearch}"
+          />
+        </div>
+        <div class="filter group">
+          <button class="chip-btn ${categoryFilter === "all" ? "active" : ""}" data-category="all">Toutes</button>
+          ${categories
+            .map(
+              (cat) =>
+                `<button class="chip-btn ${cat === categoryFilter ? "active" : ""}" data-category="${cat}">${cat}</button>`,
+            )
+            .join("")}
+        </div>
+        <div class="filter actions">
+          <button class="chip-btn fav ${favoritesOnly ? "active" : ""}" id="filter-fav">
+            ★ Favoris ${favorites.size ? `<span class="badge">${favorites.size}</span>` : ""}
+          </button>
+          <span class="muted small">${matchCount}/${registry.games.length} jeux</span>
+          ${
+            filterActive
+              ? `<button class="chip-btn ghost" id="clear-filters">Réinitialiser</button>`
+              : ""
+          }
+        </div>
       </div>
       ${errorBox}
       <div class="grid">${cards || "<p class='muted'>Aucun jeu ne correspond aux filtres.</p>"}</div>
@@ -636,21 +656,33 @@ function wireEvents() {
   cloudLoadBtn?.addEventListener("click", handleCloudLoadAction);
 
   const searchInput = document.getElementById("search-games") as HTMLInputElement | null;
-  const categorySelect = document.getElementById("category-filter") as HTMLSelectElement | null;
   const favoritesBtn = document.getElementById("filter-fav");
+  const categoryChips = Array.from(
+    document.querySelectorAll<HTMLButtonElement>(".chip-btn[data-category]"),
+  );
+  const clearBtn = document.getElementById("clear-filters");
 
   searchInput?.addEventListener("input", () => {
     searchTerm = searchInput.value;
     renderHub();
   });
 
-  categorySelect?.addEventListener("change", () => {
-    categoryFilter = categorySelect.value;
-    renderHub();
+  categoryChips.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      categoryFilter = btn.dataset.category || "all";
+      renderHub();
+    });
   });
 
   favoritesBtn?.addEventListener("click", () => {
     favoritesOnly = !favoritesOnly;
+    renderHub();
+  });
+
+  clearBtn?.addEventListener("click", () => {
+    searchTerm = "";
+    categoryFilter = "all";
+    favoritesOnly = false;
     renderHub();
   });
 }

@@ -331,34 +331,41 @@ textarea:focus {
 
 .filters {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 10px;
-  margin: 10px 0 6px;
+  margin: 12px 0 4px;
 }
 
 .filter {
-  min-width: 180px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .filter.search {
+  align-items: center;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+}
+
+.filter.search input {
   flex: 1;
   min-width: 220px;
+  border: none;
+  background: transparent;
+  padding: 8px;
 }
 
-.filter select,
-.filter input {
-  width: 100%;
+.search-icon {
+  opacity: 0.8;
 }
 
-.filter-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.filter-toggle.active {
-  background: linear-gradient(120deg, var(--color-primary), var(--color-secondary));
-  color: #061329;
+.filter.group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .game-card {
@@ -469,27 +476,55 @@ textarea:focus {
   color: #ffc0b6;
 }
 
-.icon-btn {
-  border: 1px solid rgba(255, 255, 255, 0.12);
+.icon-btn,
+.chip-btn {
+  border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.06);
   color: var(--color-muted);
-  border-radius: 12px;
-  padding: 8px 10px;
+  border-radius: 999px;
+  padding: 8px 12px;
   cursor: pointer;
-  font-weight: 800;
-  min-width: 44px;
-  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, border 0.2s ease;
+  font-weight: 700;
+  min-width: 40px;
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, border 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.icon-btn:hover {
+.icon-btn:hover,
+.chip-btn:hover {
   transform: translateY(-1px);
 }
 
-.favorite-btn.active {
+.favorite-btn.active,
+.chip-btn.active {
   background: linear-gradient(120deg, var(--color-primary), var(--color-secondary));
   color: #061329;
   border-color: rgba(255, 255, 255, 0.2);
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
+}
+
+.chip-btn.ghost {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-text);
+  border-style: dashed;
+}
+
+.chip-btn.fav {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #061329;
+  font-weight: 800;
+  font-size: 12px;
 }
 
 .help-btn {
