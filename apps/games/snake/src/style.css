@@ -192,6 +192,11 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+.btn.ghost.active {
+  background: linear-gradient(120deg, var(--color-primary), var(--color-accent));
+  color: #050712;
+}
+
 .muted {
   color: var(--color-muted);
 }

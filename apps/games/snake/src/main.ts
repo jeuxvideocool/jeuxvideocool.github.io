@@ -52,6 +52,52 @@ const controls = {
   dash: config?.input.keys.dash || "Space",
 };
 
+const difficultyPresets = {
+  easy: {
+    label: "Facile",
+    boardSize: 20,
+    tickMs: 170,
+    speedRamp: 0.992,
+    prismChance: 0.22,
+    lengthTarget: 36,
+    boostSeconds: 3.4,
+    wallSolid: true,
+  },
+  medium: {
+    label: "Moyen",
+    boardSize: config?.difficultyParams.boardSize ?? 21,
+    tickMs: config?.difficultyParams.baseTickMs ?? 140,
+    speedRamp: config?.difficultyParams.speedRamp ?? 0.985,
+    prismChance: config?.difficultyParams.prismChance ?? 0.18,
+    lengthTarget: config?.difficultyParams.targetLength ?? 46,
+    boostSeconds: (config?.difficultyParams.boostDurationMs ?? 3200) / 1000,
+    wallSolid: Boolean(config?.difficultyParams.wallIsSolid ?? 1),
+  },
+  hard: {
+    label: "Difficile",
+    boardSize: 19,
+    tickMs: 120,
+    speedRamp: 0.982,
+    prismChance: 0.14,
+    lengthTarget: 52,
+    boostSeconds: 2.6,
+    wallSolid: true,
+  },
+  extreme: {
+    label: "Extrême",
+    boardSize: 18,
+    tickMs: 105,
+    speedRamp: 0.978,
+    prismChance: 0.1,
+    lengthTarget: 60,
+    boostSeconds: 2.4,
+    wallSolid: true,
+  },
+} as const;
+
+type DifficultyKey = keyof typeof difficultyPresets;
+let selectedDifficulty: DifficultyKey = "medium";
+
 createMobileControls({
   container: document.body,
   input,
@@ -89,6 +135,9 @@ const state = {
   flash: 0,
   lengthTarget: config?.difficultyParams.targetLength ?? 42,
   wallSolid: Boolean(config?.difficultyParams.wallIsSolid ?? 1),
+  speedRamp: config?.difficultyParams.speedRamp ?? 0.99,
+  prismChance: config?.difficultyParams.prismChance ?? 0.16,
+  boostSeconds: (config?.difficultyParams.boostDurationMs ?? 2600) / 1000,
   dpr: devicePixelRatio || 1,
 };
 
@@ -120,6 +169,8 @@ function startGame() {
     showOverlay("Config manquante", "Ajoute configs/games/snake.config.json", false);
     return;
   }
+  const preset = difficultyPresets[selectedDifficulty] || difficultyPresets.medium;
+  state.boardSize = clamp(preset.boardSize, 12, 32);
   resize();
   state.running = true;
   state.dir = { x: 1, y: 0 };
@@ -132,7 +183,7 @@ function startGame() {
     { x: mid, y: mid },
   ];
   state.food = null;
-  state.tickMs = config.difficultyParams.baseTickMs;
+  state.tickMs = preset.tickMs;
   state.timer = 0;
   state.boost = 0;
   state.score = 0;
@@ -140,6 +191,11 @@ function startGame() {
   state.comboTimer = 0;
   state.particles = [];
   state.flash = 0.9;
+  state.lengthTarget = preset.lengthTarget;
+  state.wallSolid = preset.wallSolid;
+  state.speedRamp = preset.speedRamp;
+  state.prismChance = preset.prismChance;
+  state.boostSeconds = preset.boostSeconds;
   spawnFood();
   overlay.style.display = "none";
   emitEvent({ type: "SESSION_START", gameId: GAME_ID });
@@ -176,7 +232,7 @@ function spawnFood() {
     };
     guard += 1;
   } while (occupied.has(`${cell.x},${cell.y}`) && guard < 400);
-  const prism = chance(config?.difficultyParams.prismChance ?? 0.16);
+  const prism = chance(state.prismChance);
   state.food = { ...cell, type: prism ? "prism" : "core" };
 }
 
@@ -199,7 +255,7 @@ function pollInput() {
 
   const dashKey = keys.dash || "Space";
   if (pressed(dashKey) && state.boost <= 0.1) {
-    state.boost = (config.difficultyParams.boostDurationMs ?? 2600) / 1000;
+    state.boost = state.boostSeconds;
     state.flash = 1;
   }
 }
@@ -253,11 +309,11 @@ function handleEat(food: Food) {
     payload: { score: state.score },
   });
   if (food.type === "prism") {
-    state.boost = Math.max(state.boost, (config?.difficultyParams.boostDurationMs ?? 2400) / 1000);
+    state.boost = Math.max(state.boost, state.boostSeconds);
     emitEvent({ type: "STREAK_BONUS", gameId: GAME_ID });
   }
 
-  state.tickMs = Math.max(75, state.tickMs * (config?.difficultyParams.speedRamp ?? 0.99));
+  state.tickMs = Math.max(75, state.tickMs * state.speedRamp);
   spawnFood();
   state.particles.push({
     x: food.x,
@@ -437,25 +493,46 @@ function renderHUD() {
 }
 
 function showOverlay(title: string, body: string, showStart = true, lastScore?: number) {
+  const preset = difficultyPresets[selectedDifficulty] || difficultyPresets.medium;
   overlay.style.display = "grid";
   overlay.innerHTML = `
     <div class="panel">
-      <p class="pill">Prism Snake</p>
+      <p class="pill">Prism Snake · ${preset.label}</p>
       <h2>${title}</h2>
       ${lastScore !== undefined ? `<p class="muted">Score ${lastScore} · Longueur ${state.snake.length}</p>` : ""}
       <p class="muted">${body}</p>
+      <div class="panel-actions" style="flex-wrap:wrap; justify-content:center;">
+        ${Object.entries(difficultyPresets)
+          .map(
+            ([key, preset]) => `
+              <button class="btn ghost diff-btn ${key === selectedDifficulty ? "active" : ""}" data-diff="${key}">
+                ${preset.label} · ${preset.lengthTarget} segments
+              </button>
+            `,
+          )
+          .join("")}
+      </div>
       <div class="panel-actions">
         ${showStart ? `<button class="btn" id="start-btn">Lancer</button>` : ""}
         <a class="btn ghost" href="${withBasePath("/", import.meta.env.BASE_URL)}">Hub</a>
       </div>
       <div class="inline-metrics">
         <div><span>Record</span><strong>${state.best}</strong></div>
-        <div><span>Objectif</span><strong>${state.lengthTarget}</strong></div>
-        <div><span>Cadence</span><strong>${(1000 / state.tickMs).toFixed(1)} t/s</strong></div>
+        <div><span>Objectif</span><strong>${preset.lengthTarget}</strong></div>
+        <div><span>Cadence</span><strong>${(1000 / preset.tickMs).toFixed(1)} t/s</strong></div>
       </div>
     </div>
   `;
   document.getElementById("start-btn")?.addEventListener("click", startGame);
+  document.querySelectorAll<HTMLButtonElement>(".diff-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const diff = btn.dataset.diff as DifficultyKey | undefined;
+      if (diff && difficultyPresets[diff]) {
+        selectedDifficulty = diff;
+        showOverlay(title, body, showStart, lastScore);
+      }
+    });
+  });
 }
 
 showOverlay(config?.uiText.title || "Prism Snake", config?.uiText.help || "Serpent néon premium.");
