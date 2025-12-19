@@ -20,6 +20,7 @@ let cloudState: CloudState = { ready: Boolean(supabase), user: null };
 const AUTO_SYNC_DELAY_MS = 600;
 let pendingAutoSync: SaveState | null = null;
 let autoSyncTimer: ReturnType<typeof setTimeout> | null = null;
+const PSEUDO_DOMAIN = "user.local";
 
 type Listener = (state: CloudState) => void;
 const listeners: Listener[] = [];
@@ -51,9 +52,21 @@ export function getAuthState(): CloudState {
 
 type AuthAction = "login" | "register" | "logout";
 
+function toPseudoEmail(identifier: string): string {
+  if (identifier.includes("@")) {
+    return identifier.trim().toLowerCase();
+  }
+  const safe = identifier
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9._-]/g, "");
+  return `${safe || "player"}@${PSEUDO_DOMAIN}`;
+}
+
 export async function connectCloud(
   action: AuthAction,
-  params?: { email?: string; password?: string },
+  params?: { email?: string; password?: string; identifier?: string },
 ) {
   if (!requireClient()) return cloudState;
 
@@ -71,13 +84,14 @@ export async function connectCloud(
     return cloudState;
   }
 
-  const email = params?.email?.trim();
+  const identifier = (params?.identifier || params?.email || "").trim();
   const password = params?.password || "";
-  if (!email || password.length < 6) {
-    cloudState = { ...cloudState, error: "Email/mot de passe invalide." };
+  if (!identifier || password.length < 6) {
+    cloudState = { ...cloudState, error: "Identifiant/mot de passe invalide." };
     notify();
     return cloudState;
   }
+  const pseudoEmail = toPseudoEmail(identifier);
 
   cloudState = { ...cloudState, loading: true, error: undefined, message: undefined };
   notify();
@@ -85,7 +99,7 @@ export async function connectCloud(
   const auth = supabase!.auth;
   try {
     if (action === "login") {
-      const { data, error } = await auth.signInWithPassword({ email, password });
+      const { data, error } = await auth.signInWithPassword({ email: pseudoEmail, password });
       if (error) throw error;
       cloudState = {
         ready: true,
@@ -94,13 +108,17 @@ export async function connectCloud(
         message: "Connecté",
       };
     } else if (action === "register") {
-      const { data, error } = await auth.signUp({ email, password });
+      const { data, error } = await auth.signUp({
+        email: pseudoEmail,
+        password,
+        options: { data: { identifier } },
+      });
       if (error) throw error;
       cloudState = {
         ready: true,
         user: data.user,
         session: data.session,
-        message: "Compte créé (pense à vérifier ton email).",
+        message: "Compte créé (identifiant).",
       };
     }
   } catch (err: any) {

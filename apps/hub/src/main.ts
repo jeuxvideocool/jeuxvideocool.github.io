@@ -36,6 +36,16 @@ let searchTerm = "";
 let categoryFilter = "all";
 let favoritesOnly = false;
 
+function formatCloudIdentity(): string {
+  const user = cloudState.user as any;
+  if (!user) return "connecté";
+  const metaId = user.user_metadata?.identifier;
+  const email = user.email as string | undefined;
+  if (metaId) return metaId;
+  if (email?.endsWith("@user.local")) return email.replace("@user.local", "");
+  return email || "connecté";
+}
+
 attachProgressionListener();
 applyTheme(findTheme(registry.hubTheme));
 
@@ -219,9 +229,10 @@ function renderHero() {
     registry.games.find((g) => g.id === save.playerProfile.lastPlayedGameId)?.title;
   lastLevel = save.globalLevel;
   const profileLink = withBasePath("/apps/profil/", basePath);
+  const authLink = withBasePath("/apps/auth/", basePath);
 
   const cloudBadge = cloudState.user
-    ? `<span class="chip success">Cloud : ${cloudState.user.email || "connecté"}</span>`
+    ? `<span class="chip success">Cloud : ${formatCloudIdentity()}</span>`
     : cloudState.ready
       ? `<span class="chip ghost">Mode invité · données locales</span>`
       : `<span class="chip warning">Supabase non configuré (.env)</span>`;
@@ -262,6 +273,7 @@ function renderHero() {
         </div>
       </div>
       <div class="actions hero-actions">
+        <a class="btn primary" href="${authLink}">Connexion / Invité</a>
         <a class="btn ghost" href="${profileLink}">Page Profil complète</a>
       </div>
       ${renderAlexBanner(save)}
@@ -476,7 +488,7 @@ function renderCloudPanel() {
           <div>
             <p class="eyebrow">Cloud</p>
             <h2>Connecté</h2>
-            <p class="muted">${cloudState.user.email || "Compte sans email"}</p>
+            <p class="muted">Identifiant : ${formatCloudIdentity()}</p>
           </div>
           <span class="chip ghost">Dernière sync ${cloudState.lastSyncedAt ? formatDate(cloudState.lastSyncedAt) : "Jamais"}</span>
         </div>
@@ -505,7 +517,7 @@ function renderCloudPanel() {
         </div>
       </div>
       <div class="profile-form two-cols">
-        <label>Email <input id="cloud-email" type="email" placeholder="mail@example.com" /></label>
+        <label>Identifiant <input id="cloud-identifier" type="text" placeholder="mon-pseudo" /></label>
         <label>Mot de passe <input id="cloud-password" type="password" placeholder="8+ caractères" /></label>
       </div>
       <div class="actions wrap">
@@ -663,16 +675,18 @@ function wireEvents() {
   const cloudLoadBtn = document.getElementById("cloud-load");
 
   loginBtn?.addEventListener("click", async () => {
-    const email = (document.getElementById("cloud-email") as HTMLInputElement | null)?.value || "";
+    const identifier =
+      (document.getElementById("cloud-identifier") as HTMLInputElement | null)?.value || "";
     const password =
       (document.getElementById("cloud-password") as HTMLInputElement | null)?.value || "";
-    await connectCloud("login", { email, password });
+    await connectCloud("login", { identifier, password });
   });
   registerBtn?.addEventListener("click", async () => {
-    const email = (document.getElementById("cloud-email") as HTMLInputElement | null)?.value || "";
+    const identifier =
+      (document.getElementById("cloud-identifier") as HTMLInputElement | null)?.value || "";
     const password =
       (document.getElementById("cloud-password") as HTMLInputElement | null)?.value || "";
-    await connectCloud("register", { email, password });
+    await connectCloud("register", { identifier, password });
   });
   logoutBtn?.addEventListener("click", async () => {
     await connectCloud("logout");

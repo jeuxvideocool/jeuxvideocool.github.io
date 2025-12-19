@@ -25,6 +25,15 @@ function formatDuration(ms?: number) {
   return `${seconds}s`;
 }
 
+function formatCloudIdentity(user: any): string {
+  if (!user) return "connecté";
+  const metaId = user.user_metadata?.identifier;
+  const email = user.email as string | undefined;
+  if (metaId) return metaId;
+  if (email?.endsWith("@user.local")) return email.replace("@user.local", "");
+  return email || "connecté";
+}
+
 function render() {
   const snapshot = getProgressionSnapshot();
   const achievements = getAchievementsConfig().achievements;
@@ -125,14 +134,14 @@ function render() {
           <p class="muted small">Synchronisation cross-device via Supabase (Spark gratuit). Renseigne VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY.</p>
           ${
             authState?.user
-              ? `<div class="status ok">Connecté : ${authState.user.email || "compte sans email"}</div>
+              ? `<div class="status ok">Connecté : ${formatCloudIdentity(authState.user)}</div>
                  <div class="actions">
                     <button class="btn primary" id="cloud-save">Sauvegarder vers cloud</button>
                     <button class="btn ghost" id="cloud-load">Charger depuis cloud</button>
                     <button class="btn ghost danger" id="cloud-logout">Déconnexion</button>
                  </div>
                  <p class="muted small">Les données sont stockées dans la table "saves" (clé user_id, JSON save).</p>`
-              : `<label>Email <input id="cloud-email" type="email" placeholder="mail@example.com" /></label>
+              : `<label>Identifiant <input id="cloud-identifier" type="text" placeholder="mon-pseudo" /></label>
                  <label>Mot de passe <input id="cloud-password" type="password" placeholder="8+ caractères" /></label>
                  <div class="actions">
                    <button class="btn primary" id="cloud-login">Connexion</button>
@@ -207,17 +216,19 @@ function wire() {
 
   // Cloud
   document.getElementById("cloud-login")?.addEventListener("click", async () => {
-    const email = (document.getElementById("cloud-email") as HTMLInputElement | null)?.value || "";
+    const identifier =
+      (document.getElementById("cloud-identifier") as HTMLInputElement | null)?.value || "";
     const password =
       (document.getElementById("cloud-password") as HTMLInputElement | null)?.value || "";
-    await connectCloud("login", { email, password });
+    await connectCloud("login", { identifier, password });
     render();
   });
   document.getElementById("cloud-register")?.addEventListener("click", async () => {
-    const email = (document.getElementById("cloud-email") as HTMLInputElement | null)?.value || "";
+    const identifier =
+      (document.getElementById("cloud-identifier") as HTMLInputElement | null)?.value || "";
     const password =
       (document.getElementById("cloud-password") as HTMLInputElement | null)?.value || "";
-    await connectCloud("register", { email, password });
+    await connectCloud("register", { identifier, password });
     render();
   });
   document.getElementById("cloud-logout")?.addEventListener("click", async () => {
