@@ -113,6 +113,14 @@ function formatDuration(ms?: number) {
   return `${seconds}s`;
 }
 
+function mostPlayedGameTitle(save: SaveState): { title: string; duration: string } {
+  const entries = Object.entries(save.games || {});
+  if (!entries.length) return { title: "Aucun jeu", duration: "0m" };
+  const [id, game] = entries.sort((a, b) => (b[1].timePlayedMs || 0) - (a[1].timePlayedMs || 0))[0];
+  const reg = registry.games.find((g) => g.id === id);
+  return { title: reg?.title || id, duration: formatDuration(game.timePlayedMs) };
+}
+
 function handleProfileChange(name: string, avatar: string) {
   const trimmedName = name.trim() || "Joueur";
   const trimmedAvatar = avatar.trim() || "🎮";
@@ -273,7 +281,7 @@ function renderHero() {
     registry.games.find((g) => g.id === save.playerProfile.lastPlayedGameId)?.title;
   lastLevel = save.globalLevel;
   const profileLink = withBasePath("/apps/profil/", basePath);
-
+  const mostPlayed = mostPlayedGameTitle(save);
   const cloudBadge = cloudState.user
     ? `<span class="chip success">Cloud : ${formatCloudIdentity()}</span>`
     : cloudState.ready
@@ -295,6 +303,9 @@ function renderHero() {
               <span class="chip">⏱ ${totalTime}</span>
               <span class="chip">🎮 ${sessionCount} sessions</span>
             </div>
+            <div class="profile-actions">
+              <a class="btn primary strong" href="${profileLink}">Voir le profil</a>
+            </div>
           </div>
         </div>
         <div class="stat-grid compact">
@@ -313,11 +324,12 @@ function renderHero() {
             <strong>${totalTime}</strong>
             <p class="muted small">Sessions ${sessionCount}</p>
           </div>
+          <div class="stat-card">
+            <p class="label">Jeu le plus joué</p>
+            <strong>${mostPlayed.title}</strong>
+            <p class="muted small">Temps ${mostPlayed.duration}</p>
+          </div>
         </div>
-      </div>
-      <div class="actions hero-actions">
-        <a class="btn primary" href="${profileLink}">Ouvrir le profil</a>
-        <button class="btn ghost" id="go-saves">Voir les saves</button>
       </div>
       ${renderAlexBanner(save)}
       <div class="level-row ${levelUp ? "level-up" : ""}">
@@ -694,10 +706,6 @@ function wireEvents() {
   avatarInput?.addEventListener("change", () =>
     handleProfileChange(nameInput?.value || "Joueur", avatarInput.value),
   );
-  document.getElementById("go-saves")?.addEventListener("click", () => {
-    activeTab = "saves";
-    renderHub();
-  });
 
   document.querySelectorAll<HTMLButtonElement>(".help-btn").forEach((btn) => {
     btn.addEventListener("click", () => {

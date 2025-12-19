@@ -214,6 +214,10 @@ a {
   align-items: center;
 }
 
+.profile-actions {
+  margin-top: 10px;
+}
+
 .eyebrow {
   margin: 0;
   text-transform: uppercase;
