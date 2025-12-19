@@ -16,10 +16,12 @@ import {
   loadCloudSave,
   saveCloud,
   subscribe as subscribeCloud,
+  uploadAvatarImage,
+  removeAvatarImage,
 } from "@storage/cloud";
 import type { SaveState } from "@storage";
 
-type Tab = "hub" | "achievements" | "stats";
+type Tab = "hub" | "achievements" | "stats" | "profile";
 
 const app = document.getElementById("app")!;
 const registry = getRegistry();
@@ -35,6 +37,9 @@ let cloudState = getAuthState();
 let searchTerm = "";
 let categoryFilter = "all";
 let favoritesOnly = false;
+let profileAvatarFile: File | null = null;
+let profileAvatarPreview: string | null = null;
+let profileAvatarReset = false;
 
 function formatCloudIdentity(): string {
   const user = cloudState.user as any;
@@ -44,6 +49,13 @@ function formatCloudIdentity(): string {
   if (metaId) return metaId;
   if (email?.endsWith("@user.local")) return email.replace("@user.local", "");
   return email || "connecté";
+}
+
+function getAvatarHelperText(hasImage: boolean) {
+  if (hasImage) return "Image stockée sur Supabase. L'emoji reste disponible en secours.";
+  if (!cloudState.ready) return "Supabase non configuré (.env).";
+  if (!cloudState.user) return "Connecte-toi au cloud pour utiliser une image. Emoji disponible hors-ligne.";
+  return "Choisis une image, elle sera envoyée sur Supabase.";
 }
 
 attachProgressionListener();
@@ -128,6 +140,34 @@ function renderAvatar(url?: string | null, emoji?: string) {
   }</div>`;
 }
 
+function profileAvatarUrl() {
+  if (profileAvatarReset) return null;
+  return profileAvatarPreview || snapshot.save.playerProfile.avatarUrl || null;
+}
+
+function clearProfileAvatarPreview() {
+  if (profileAvatarPreview) {
+    URL.revokeObjectURL(profileAvatarPreview);
+    profileAvatarPreview = null;
+  }
+}
+
+function refreshProfileAvatarPreviewDom() {
+  const previewEl = document.getElementById("profile-avatar-preview");
+  const helper = document.getElementById("profile-avatar-helper");
+  const clearBtn = document.getElementById("profile-avatar-clear") as HTMLButtonElement | null;
+  const url = profileAvatarUrl();
+  const emoji = snapshot.save.playerProfile.avatar || "🎮";
+  const hasImage = Boolean(url);
+
+  if (previewEl) {
+    previewEl.classList.toggle("has-image", hasImage);
+    previewEl.innerHTML = hasImage ? `<img src="${url}" alt="Avatar" />` : emoji;
+  }
+  if (helper) helper.textContent = getAvatarHelperText(hasImage);
+  if (clearBtn) clearBtn.disabled = !hasImage;
+}
+
 function handleProfileChange(name: string, avatar: string) {
   const trimmedName = name.trim() || "Joueur";
   const trimmedAvatar = avatar.trim() || "🎮";
@@ -156,6 +196,9 @@ function handleImport(text: string) {
   const result = importSave(text);
   if (result.success) {
     showToast("Import réussi", "success");
+    clearProfileAvatarPreview();
+    profileAvatarFile = null;
+    profileAvatarReset = false;
     refresh();
   } else {
     showToast(result.error || "Import impossible", "error");
@@ -170,6 +213,9 @@ function handleReset(gameId?: string) {
     resetSave();
     showToast("Progression globale réinitialisée", "info");
   }
+  clearProfileAvatarPreview();
+  profileAvatarFile = null;
+  profileAvatarReset = false;
   refresh();
 }
 
@@ -202,6 +248,9 @@ async function handleCloudLoadAction() {
   if (res?.state) {
     importSave(JSON.stringify(res.state));
     showToast("Sauvegarde cloud importée", "success");
+    clearProfileAvatarPreview();
+    profileAvatarFile = null;
+    profileAvatarReset = false;
     refresh();
   } else if (res?.error) {
     showToast(res.error, "error");
@@ -214,6 +263,7 @@ function renderNav() {
       <button class="nav-btn ${activeTab === "hub" ? "active" : ""}" data-tab="hub">Hub</button>
       <button class="nav-btn ${activeTab === "achievements" ? "active" : ""}" data-tab="achievements">Succès</button>
       <button class="nav-btn ${activeTab === "stats" ? "active" : ""}" data-tab="stats">Stats</button>
+      <button class="nav-btn ${activeTab === "profile" ? "active" : ""}" data-tab="profile">Profil</button>
     </nav>
   `;
 }
@@ -288,7 +338,6 @@ function renderHero() {
     save.playerProfile.lastPlayedGameId &&
     registry.games.find((g) => g.id === save.playerProfile.lastPlayedGameId)?.title;
   lastLevel = save.globalLevel;
-  const profileLink = withBasePath("/apps/profil/", basePath);
   const mostPlayed = mostPlayedGameTitle(save);
   const cloudBadge = cloudState.user
     ? `<span class="chip success">Cloud : ${formatCloudIdentity()}</span>`
@@ -310,7 +359,7 @@ function renderHero() {
               ${cloudBadge}
               <span class="chip">⏱ ${totalTime}</span>
               <span class="chip">🎮 ${sessionCount} sessions</span>
-              <a class="btn primary strong profile-inline" href="${profileLink}">Voir le profil</a>
+              <button class="btn primary strong profile-inline" id="open-profile">Voir le profil</button>
             </div>
           </div>
         </div>
@@ -674,6 +723,145 @@ function renderStats() {
   `;
 }
 
+function renderProfileTab() {
+  const save = snapshot.save;
+  const games = Object.entries(save.games || {});
+  const mostPlayed = mostPlayedGameTitle(save);
+  const lastSync = cloudState.lastSyncedAt ? formatDate(cloudState.lastSyncedAt) : "Jamais";
+  const lastPlayed =
+    save.playerProfile.lastPlayedGameId &&
+    registry.games.find((g) => g.id === save.playerProfile.lastPlayedGameId)?.title;
+  const avatarUrl = profileAvatarUrl();
+  const helper = getAvatarHelperText(Boolean(avatarUrl));
+
+  return `
+    <section class="card">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Profil</p>
+          <h2>Identité & avatar</h2>
+          <p class="muted small">Pseudo lié au compte cloud. Emoji modifiable, image stockée sur Supabase.</p>
+        </div>
+        <span class="chip ghost">Sync : ${lastSync}</span>
+      </div>
+      <div class="profile-identity">
+        <div class="avatar-panel">
+          <div class="avatar ${avatarUrl ? "has-image" : ""}" id="profile-avatar-preview">
+            ${avatarUrl ? `<img src="${avatarUrl}" alt="Avatar" />` : save.playerProfile.avatar || "🎮"}
+          </div>
+          <p class="muted small" id="profile-avatar-helper">${helper}</p>
+          <label class="file-drop">
+            <input type="file" id="profile-avatar-upload" accept="image/*" />
+            <strong>Image Supabase</strong>
+            <span class="muted small">PNG/JPG · 1.5 Mo max</span>
+          </label>
+          <button class="btn ghost danger" id="profile-avatar-clear" type="button" ${
+            avatarUrl ? "" : "disabled"
+          }>Revenir à l'emoji</button>
+        </div>
+        <div class="profile-form two-cols">
+          <label>Pseudo <input id="player-name" value="${save.playerProfile.name}" disabled /></label>
+          <label>Avatar (emoji) <input id="player-avatar" value="${save.playerProfile.avatar || "🎮"}" maxlength="4" /></label>
+          <div class="actions-grid">
+            <button class="btn primary" id="profile-save" type="button">Enregistrer</button>
+            <button class="btn ghost" id="export-save" type="button">Exporter JSON</button>
+          </div>
+          <div class="info-grid">
+            <div>
+              <span class="label">Dernier jeu</span>
+              <strong>${lastPlayed || "Aucun jeu lancé"}</strong>
+            </div>
+            <div>
+              <span class="label">Jeu le plus joué</span>
+              <strong>${mostPlayed.title}</strong>
+              <p class="muted small">${mostPlayed.duration}</p>
+            </div>
+            <div>
+              <span class="label">Sessions</span>
+              <strong>${save.globalStats.totalSessions}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card cloud">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Cloud</p>
+          <h2>Supabase</h2>
+          <p class="muted small">Sauvegarde manuelle sur ton compte connecté.</p>
+        </div>
+        <span class="chip success">Connecté : ${formatCloudIdentity()}</span>
+      </div>
+      <div class="actions-grid">
+        <button class="btn primary" id="cloud-save" ${cloudState.loading ? "disabled" : ""}>Sauvegarder vers cloud</button>
+        <button class="btn ghost" id="cloud-load" ${cloudState.loading ? "disabled" : ""}>Charger depuis cloud</button>
+        <button class="btn ghost danger" id="cloud-logout" ${cloudState.loading ? "disabled" : ""}>Déconnexion</button>
+      </div>
+      <p class="muted small">Dernière synchro : ${lastSync}</p>
+      ${
+        cloudState.message
+          ? `<p class="status ok">${cloudState.message}</p>`
+          : `<p class="status info">Tes données locales sont synchronisées sur demande.</p>`
+      }
+      ${cloudState.error ? `<p class="status error">${cloudState.error}</p>` : ""}
+    </section>
+
+    <section class="card">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Sauvegardes locales</p>
+          <h2>Export / Import</h2>
+          <p class="muted small">Exporter, importer ou remettre à zéro la progression locale.</p>
+        </div>
+        <button class="btn ghost danger" id="reset-save" type="button">Reset global</button>
+      </div>
+      <label class="import">
+        <span class="label">Import JSON</span>
+        <textarea id="import-text" placeholder="Colle ici ton export JSON"></textarea>
+        <button class="btn primary" id="import-btn" type="button">Importer</button>
+      </label>
+      <div class="save-meta">
+        <div>
+          <span class="label">Temps global</span>
+          <strong>${formatDuration(save.globalStats.timePlayedMs)}</strong>
+        </div>
+        <div>
+          <span class="label">Jeux joués</span>
+          <strong>${Object.keys(save.games).length}/${registry.games.length}</strong>
+        </div>
+        <div>
+          <span class="label">Succès</span>
+          <strong>${save.achievementsUnlocked.length}/${achievementsConfig.achievements.length}</strong>
+        </div>
+      </div>
+      <div class="save-list">
+        ${
+          games.length
+            ? games
+                .map(
+                  ([id, game]) => `
+          <div class="save-row">
+            <div>
+              <strong>${id}</strong>
+              <p class="muted small">v${game.saveSchemaVersion} · Dernier : ${formatDate(game.lastPlayedAt)}</p>
+            </div>
+            <div class="chips-row">
+              <span class="chip ghost">⏱ ${formatDuration(game.timePlayedMs)}</span>
+              <span class="chip ghost">🏆 ${game.bestScore ?? "—"}</span>
+            </div>
+          </div>
+        `,
+                )
+                .join("")
+            : "<p class='muted'>Aucune sauvegarde par jeu pour le moment.</p>"
+        }
+      </div>
+    </section>
+  `;
+}
+
 function renderHub() {
   if (!cloudState.user) {
     app.innerHTML = renderAuthGate();
@@ -688,6 +876,7 @@ function renderHub() {
       ${activeTab === "hub" ? renderGameGrid() : ""}
       ${activeTab === "achievements" ? renderAchievements() : ""}
       ${activeTab === "stats" ? renderStats() : ""}
+      ${activeTab === "profile" ? renderProfileTab() : ""}
     </div>
   `;
 
@@ -723,14 +912,22 @@ function wireEvents() {
     });
   });
 
+  const openProfile = document.getElementById("open-profile");
+  openProfile?.addEventListener("click", () => {
+    activeTab = "profile";
+    renderHub();
+  });
+
   const nameInput = document.getElementById("player-name") as HTMLInputElement | null;
   const avatarInput = document.getElementById("player-avatar") as HTMLInputElement | null;
-  nameInput?.addEventListener("change", () =>
-    handleProfileChange(nameInput.value, avatarInput?.value || "🎮"),
-  );
-  avatarInput?.addEventListener("change", () =>
-    handleProfileChange(nameInput?.value || "Joueur", avatarInput.value),
-  );
+  if (nameInput && avatarInput && activeTab !== "profile") {
+    nameInput.addEventListener("change", () =>
+      handleProfileChange(nameInput.value, avatarInput?.value || "🎮"),
+    );
+    avatarInput.addEventListener("change", () =>
+      handleProfileChange(nameInput?.value || "Joueur", avatarInput.value),
+    );
+  }
 
   document.querySelectorAll<HTMLButtonElement>(".help-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -788,9 +985,82 @@ function wireEvents() {
   });
   logoutBtn?.addEventListener("click", async () => {
     await connectCloud("logout");
+    profileAvatarFile = null;
+    profileAvatarReset = false;
+    clearProfileAvatarPreview();
   });
   cloudSaveBtn?.addEventListener("click", handleCloudSaveAction);
   cloudLoadBtn?.addEventListener("click", handleCloudLoadAction);
+
+  const avatarUpload = document.getElementById("profile-avatar-upload") as HTMLInputElement | null;
+  const avatarClear = document.getElementById("profile-avatar-clear") as HTMLButtonElement | null;
+  const profileSave = document.getElementById("profile-save");
+
+  avatarUpload?.addEventListener("change", (event) => {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      showToast("Seules les images sont autorisées.", "error");
+      input.value = "";
+      return;
+    }
+    if (file.size > 1.5 * 1024 * 1024) {
+      showToast("Image trop lourde (1.5 Mo max).", "error");
+      input.value = "";
+      return;
+    }
+    clearProfileAvatarPreview();
+    profileAvatarFile = file;
+    profileAvatarPreview = URL.createObjectURL(file);
+    profileAvatarReset = false;
+    refreshProfileAvatarPreviewDom();
+  });
+
+  avatarClear?.addEventListener("click", () => {
+    profileAvatarReset = true;
+    profileAvatarFile = null;
+    clearProfileAvatarPreview();
+    refreshProfileAvatarPreviewDom();
+  });
+
+  profileSave?.addEventListener("click", async () => {
+    const emojiInput = document.getElementById("player-avatar") as HTMLInputElement | null;
+    const nextEmoji = (emojiInput?.value || "🎮").slice(0, 4);
+
+    const previousPath = snapshot.save.playerProfile.avatarStoragePath;
+    let nextAvatarUrl = snapshot.save.playerProfile.avatarUrl;
+    let nextAvatarPath = previousPath;
+
+    if (profileAvatarFile) {
+      const upload = await uploadAvatarImage(profileAvatarFile, previousPath || undefined);
+      if (!upload.url || !upload.path || upload.error) {
+        showToast(upload.error || "Upload avatar impossible", "error");
+        return;
+      }
+      nextAvatarUrl = upload.url;
+      nextAvatarPath = upload.path;
+    } else if (profileAvatarReset) {
+      nextAvatarUrl = undefined;
+      nextAvatarPath = undefined;
+      if (previousPath && cloudState.ready && cloudState.user) {
+        await removeAvatarImage(previousPath);
+      }
+    }
+
+    updateSave((state) => {
+      state.playerProfile.avatar = nextEmoji;
+      state.playerProfile.avatarUrl = nextAvatarUrl;
+      state.playerProfile.avatarStoragePath = nextAvatarPath;
+      state.playerProfile.avatarType = nextAvatarUrl ? "image" : "emoji";
+    });
+
+    profileAvatarFile = null;
+    profileAvatarReset = false;
+    clearProfileAvatarPreview();
+    showToast("Profil mis à jour", "success");
+    refresh();
+  });
 
   const searchInput = document.getElementById("search-games") as HTMLInputElement | null;
   const favoritesBtn = document.getElementById("filter-fav");
@@ -822,6 +1092,8 @@ function wireEvents() {
     favoritesOnly = false;
     renderHub();
   });
+
+  refreshProfileAvatarPreviewDom();
 }
 
 function refresh() {
