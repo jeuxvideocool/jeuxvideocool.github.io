@@ -130,6 +130,7 @@ export function loadSave(): SaveState {
 export function persistSave(state: SaveState) {
   const payload = { ...state, schemaVersion: CURRENT_SCHEMA_VERSION };
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
+  notifySaveListeners(payload);
 }
 
 export function updateSave(mutator: (state: SaveState) => void): SaveState {
@@ -192,4 +193,19 @@ export function updateGameState(
     mutator(gs);
     touchLastPlayed(state, gameId);
   });
+}
+
+type SaveListener = (state: SaveState) => void;
+const saveListeners: SaveListener[] = [];
+
+function notifySaveListeners(state: SaveState) {
+  saveListeners.forEach((listener) => listener(state));
+}
+
+export function subscribeToSaveChanges(listener: SaveListener) {
+  saveListeners.push(listener);
+  return () => {
+    const idx = saveListeners.indexOf(listener);
+    if (idx >= 0) saveListeners.splice(idx, 1);
+  };
 }

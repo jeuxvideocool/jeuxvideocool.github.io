@@ -1,4 +1,5 @@
 import { createClient, Session, User } from "@supabase/supabase-js";
+import { loadSave, subscribeToSaveChanges } from "./index";
 import type { SaveState } from "./index";
 
 export type CloudState = {
@@ -16,6 +17,9 @@ let supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 let supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
 
 let cloudState: CloudState = { ready: Boolean(supabase), user: null };
+const AUTO_SYNC_DELAY_MS = 600;
+let pendingAutoSync: SaveState | null = null;
+let autoSyncTimer: ReturnType<typeof setTimeout> | null = null;
 
 type Listener = (state: CloudState) => void;
 const listeners: Listener[] = [];
@@ -57,6 +61,11 @@ export async function connectCloud(
     cloudState = { ...cloudState, loading: true, error: undefined };
     notify();
     await supabase!.auth.signOut();
+    pendingAutoSync = null;
+    if (autoSyncTimer) {
+      clearTimeout(autoSyncTimer);
+      autoSyncTimer = null;
+    }
     cloudState = { ready: true, user: null, session: null, message: "Déconnecté" };
     notify();
     return cloudState;
@@ -100,6 +109,9 @@ export async function connectCloud(
 
   cloudState = { ...cloudState, loading: false };
   notify();
+  if (cloudState.user) {
+    scheduleAutoSync(loadSave());
+  }
   return cloudState;
 }
 
@@ -152,6 +164,25 @@ export async function loadCloudSave(): Promise<{ state?: SaveState; error?: stri
   return { state: data.save as SaveState };
 }
 
+function scheduleAutoSync(state: SaveState) {
+  if (!supabase || !cloudState.user) return;
+  pendingAutoSync = state;
+  if (autoSyncTimer) return;
+
+  autoSyncTimer = setTimeout(async () => {
+    autoSyncTimer = null;
+    if (!pendingAutoSync) return;
+    const payload = pendingAutoSync;
+    pendingAutoSync = null;
+    if (!supabase || !cloudState.user) return;
+    await saveCloud(payload);
+  }, AUTO_SYNC_DELAY_MS);
+}
+
+subscribeToSaveChanges((state) => {
+  scheduleAutoSync(state);
+});
+
 if (supabase) {
   supabase.auth.onAuthStateChange((_event, session) => {
     cloudState = {
@@ -164,5 +195,8 @@ if (supabase) {
       lastSyncedAt: cloudState.lastSyncedAt,
     };
     notify();
+    if (session?.user) {
+      scheduleAutoSync(loadSave());
+    }
   });
 }

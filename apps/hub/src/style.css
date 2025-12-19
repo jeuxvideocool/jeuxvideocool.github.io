@@ -125,6 +125,12 @@ a {
   justify-content: space-between;
 }
 
+.hero-actions {
+  position: relative;
+  z-index: 1;
+  justify-content: flex-end;
+}
+
 .alex-banner {
   margin: 8px 0 6px;
   padding: 12px 14px;

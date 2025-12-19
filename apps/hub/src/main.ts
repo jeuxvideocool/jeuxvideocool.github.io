@@ -218,6 +218,7 @@ function renderHero() {
     save.playerProfile.lastPlayedGameId &&
     registry.games.find((g) => g.id === save.playerProfile.lastPlayedGameId)?.title;
   lastLevel = save.globalLevel;
+  const profileLink = withBasePath("/apps/profil/", basePath);
 
   const cloudBadge = cloudState.user
     ? `<span class="chip success">Cloud : ${cloudState.user.email || "connecté"}</span>`
@@ -259,6 +260,9 @@ function renderHero() {
             <p class="muted small">Sessions ${sessionCount}</p>
           </div>
         </div>
+      </div>
+      <div class="actions hero-actions">
+        <a class="btn ghost" href="${profileLink}">Page Profil complète</a>
       </div>
       ${renderAlexBanner(save)}
       <div class="level-row ${levelUp ? "level-up" : ""}">

@@ -9,12 +9,29 @@ import { connectCloud, getAuthState, loadCloudSave, saveCloud } from "./sync";
 const basePath = import.meta.env.BASE_URL || "/";
 const app = document.getElementById("app")!;
 
+function formatDate(timestamp?: number) {
+  if (!timestamp) return "Jamais";
+  return new Date(timestamp).toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" });
+}
+
+function formatDuration(ms?: number) {
+  if (!ms) return "0m";
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours) return `${hours}h ${minutes}m`;
+  if (minutes) return `${minutes}m ${seconds}s`;
+  return `${seconds}s`;
+}
+
 function render() {
   const snapshot = getProgressionSnapshot();
   const achievements = getAchievementsConfig().achievements;
   const unlocked = new Set(snapshot.save.achievementsUnlocked);
   const registry = getRegistry();
   const authState = getAuthState();
+  const games = Object.entries(snapshot.save.games);
 
   app.innerHTML = `
     <div class="shell">
@@ -56,6 +73,49 @@ function render() {
           <textarea id="import" placeholder="Colle ici ton export JSON"></textarea>
           <button class="btn primary" id="import-btn">Importer</button>
           <p class="muted small">Les données restent sur ton appareil (localStorage). Aucun service externe n'est utilisé.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Sauvegardes locales</h2>
+        <p class="muted small">Vue rapide de ce qui est stocké sur cet appareil (cloud ci-dessous).</p>
+        <div class="save-meta">
+          <div>
+            <span class="label">Temps global</span>
+            <strong>${formatDuration(snapshot.save.globalStats.timePlayedMs)}</strong>
+          </div>
+          <div>
+            <span class="label">Jeux joués</span>
+            <strong>${Object.keys(snapshot.save.games).length}/${registry.games.length}</strong>
+          </div>
+          <div>
+            <span class="label">Sessions</span>
+            <strong>${snapshot.save.globalStats.totalSessions}</strong>
+          </div>
+        </div>
+        <div class="save-list">
+          ${
+            games.length
+              ? games
+                  .map(
+                    ([id, game]) => `
+              <div class="save-row">
+                <div>
+                  <strong>${id}</strong>
+                  <p class="muted small">v${game.saveSchemaVersion} · Dernier : ${formatDate(
+                    game.lastPlayedAt
+                  )}</p>
+                </div>
+                <div class="chips">
+                  <span class="chip ghost">⏱ ${formatDuration(game.timePlayedMs)}</span>
+                  <span class="chip ghost">🏆 ${game.bestScore ?? "—"}</span>
+                </div>
+              </div>
+            `,
+                  )
+                  .join("")
+              : "<p class='muted'>Aucune sauvegarde par jeu pour le moment.</p>"
+          }
         </div>
       </section>
 
