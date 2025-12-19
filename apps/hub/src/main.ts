@@ -19,7 +19,7 @@ import {
 } from "@storage/cloud";
 import type { SaveState } from "@storage";
 
-type Tab = "hub" | "achievements" | "saves";
+type Tab = "hub" | "achievements" | "stats";
 
 const app = document.getElementById("app")!;
 const registry = getRegistry();
@@ -205,7 +205,7 @@ function renderNav() {
     <nav class="nav">
       <button class="nav-btn ${activeTab === "hub" ? "active" : ""}" data-tab="hub">Hub</button>
       <button class="nav-btn ${activeTab === "achievements" ? "active" : ""}" data-tab="achievements">Succès</button>
-      <button class="nav-btn ${activeTab === "saves" ? "active" : ""}" data-tab="saves">Saves</button>
+      <button class="nav-btn ${activeTab === "stats" ? "active" : ""}" data-tab="stats">Stats</button>
     </nav>
   `;
 }
@@ -302,9 +302,7 @@ function renderHero() {
               ${cloudBadge}
               <span class="chip">⏱ ${totalTime}</span>
               <span class="chip">🎮 ${sessionCount} sessions</span>
-            </div>
-            <div class="profile-actions">
-              <a class="btn primary strong" href="${profileLink}">Voir le profil</a>
+              <a class="btn primary strong profile-inline" href="${profileLink}">Voir le profil</a>
             </div>
           </div>
         </div>
@@ -579,71 +577,90 @@ function renderCloudPanel() {
   `;
 }
 
-function renderSaves() {
+function renderStats() {
   const save = snapshot.save;
-  const games = Object.entries(save.games);
-  const gameRows = games
-    .map(([id, game]) => {
-      return `
-        <div class="save-row">
-          <div>
-            <strong>${id}</strong>
-            <p class="muted">v${game.saveSchemaVersion} · Dernier : ${formatDate(game.lastPlayedAt)}</p>
-          </div>
-          <div class="row-meta">
-            <span class="chip ghost">⏱ ${formatDuration(game.timePlayedMs)}</span>
-            <button class="btn ghost reset-game" data-game="${id}">Reset</button>
-          </div>
-        </div>
-      `;
-    })
-    .join("");
+  const gamesEntries = Object.entries(save.games || {});
+  const maxTime = Math.max(
+    1,
+    ...gamesEntries.map(([, game]) => Math.max(game.timePlayedMs ?? 0, 1)),
+  );
+  const achievementsUnlocked = save.achievementsUnlocked.length;
+  const totalAchievements = achievementsConfig.achievements.length;
+  const lastPlayed = gamesEntries
+    .map(([id, game]) => ({ id, last: game.lastPlayedAt || 0 }))
+    .sort((a, b) => b.last - a.last)[0];
+  const lastPlayedTitle =
+    lastPlayed && lastPlayed.last
+      ? registry.games.find((g) => g.id === lastPlayed.id)?.title || lastPlayed.id
+      : "Aucun jeu";
+  const gameBars =
+    gamesEntries.length === 0
+      ? "<p class='muted'>Pas encore de données de jeu.</p>"
+      : gamesEntries
+          .map(([id, game]) => {
+            const title = registry.games.find((g) => g.id === id)?.title || id;
+            const percent = Math.max(
+              5,
+              Math.round(((game.timePlayedMs || 0) / maxTime) * 100),
+            );
+            return `
+            <div class="chart-row">
+              <div>
+                <strong>${title}</strong>
+                <p class="muted small">${formatDuration(game.timePlayedMs)} · ${
+                  game.bestScore ? `Best ${game.bestScore}` : "Aucun score"
+                } · ${game.lastPlayedAt ? formatDate(game.lastPlayedAt) : "Jamais"}</p>
+              </div>
+              <div class="chart-bar">
+                <span style="width:${percent}%"></span>
+              </div>
+            </div>
+          `;
+          })
+          .join("");
 
   return `
-    <div class="panel-grid">
-      <section class="card">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">Saves</p>
-            <h2>Gestion</h2>
-            <p class="muted">Schema v${save.schemaVersion}</p>
-          </div>
-          <div class="actions">
-            <button class="btn ghost" id="export-save">Exporter</button>
-            <button class="btn ghost danger" id="reset-save">Reset global</button>
-          </div>
-        </div>
-        <div class="stat-grid">
-          <div class="stat-card">
-            <p class="label">Temps global</p>
-            <strong>${formatDuration(save.globalStats.timePlayedMs)}</strong>
-          </div>
-          <div class="stat-card">
-            <p class="label">Jeux joués</p>
-            <strong>${Object.keys(save.games).length}/${registry.games.length}</strong>
-          </div>
-          <div class="stat-card">
-            <p class="label">Sessions</p>
-            <strong>${save.globalStats.totalSessions}</strong>
-          </div>
-        </div>
-        <label class="import">
-          Import JSON
-          <textarea id="import-text" placeholder="Colle ici ta sauvegarde"></textarea>
-          <button class="btn primary" id="import-btn">Importer</button>
-        </label>
-      </section>
-      ${renderCloudPanel()}
-    </div>
     <section class="card">
       <div class="section-head">
         <div>
-          <p class="eyebrow">Par jeu</p>
-          <h2>Saves détaillées</h2>
+          <p class="eyebrow">Stats</p>
+          <h2>Vue d'ensemble</h2>
+          <p class="muted">Activité, temps de jeu et progression globale.</p>
         </div>
       </div>
-      <div class="save-list">
-        ${gameRows || "<p class='muted'>Aucune save par jeu pour le moment.</p>"}
+      <div class="stat-grid">
+        <div class="stat-card">
+          <p class="label">Temps total</p>
+          <strong>${formatDuration(save.globalStats.timePlayedMs)}</strong>
+          <p class="muted small">${save.globalStats.totalSessions} sessions</p>
+        </div>
+        <div class="stat-card">
+          <p class="label">Jeux joués</p>
+          <strong>${Object.keys(save.games).length}/${registry.games.length}</strong>
+          <p class="muted small">Dernier : ${lastPlayedTitle}</p>
+        </div>
+        <div class="stat-card">
+          <p class="label">Succès</p>
+          <strong>${achievementsUnlocked}/${totalAchievements}</strong>
+          <p class="muted small">Schema v${save.schemaVersion}</p>
+        </div>
+        <div class="stat-card">
+          <p class="label">Jeu le plus joué</p>
+          <strong>${mostPlayedGameTitle(save).title}</strong>
+          <p class="muted small">${mostPlayedGameTitle(save).duration}</p>
+        </div>
+      </div>
+    </section>
+    <section class="card">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Temps par jeu</p>
+          <h2>Répartition</h2>
+          <p class="muted">Temps passé, scores et derniers lancements.</p>
+        </div>
+      </div>
+      <div class="chart-list">
+        ${gameBars}
       </div>
     </section>
   `;
@@ -662,7 +679,7 @@ function renderHub() {
       ${renderHero()}
       ${activeTab === "hub" ? renderGameGrid() : ""}
       ${activeTab === "achievements" ? renderAchievements() : ""}
-      ${activeTab === "saves" ? renderSaves() : ""}
+      ${activeTab === "stats" ? renderStats() : ""}
     </div>
   `;
 

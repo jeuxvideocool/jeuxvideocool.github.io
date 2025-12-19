@@ -4,10 +4,22 @@ import { withBasePath } from "@core/utils";
 import { getAchievementsConfig, getRegistry } from "@config";
 import { getProgressionSnapshot } from "@progression";
 import { exportSave, importSave, resetSave, updateSave } from "@storage";
-import { connectCloud, getAuthState, loadCloudSave, saveCloud } from "@storage/cloud";
+import {
+  connectCloud,
+  getAuthState,
+  loadCloudSave,
+  saveCloud,
+  subscribe as subscribeCloud,
+} from "@storage/cloud";
 
 const basePath = import.meta.env.BASE_URL || "/";
 const app = document.getElementById("app")!;
+let cloudState = getAuthState();
+
+subscribeCloud((state) => {
+  cloudState = state;
+  render();
+});
 
 function formatDate(timestamp?: number) {
   if (!timestamp) return "Jamais";
@@ -59,9 +71,8 @@ function render() {
   const achievements = getAchievementsConfig().achievements;
   const unlocked = new Set(snapshot.save.achievementsUnlocked);
   const registry = getRegistry();
-  const authState = getAuthState();
   const games = Object.entries(snapshot.save.games);
-  const nameDisabled = authState?.user ? "disabled" : "";
+  const nameDisabled = cloudState?.user ? "disabled" : "";
   const mostPlayed = mostPlayedGameTitle(snapshot);
 
   app.innerHTML = `
@@ -78,9 +89,9 @@ function render() {
           </div>
           <div class="chips">
             ${
-              authState.user
-                ? `<span class="chip success">Cloud : ${formatCloudIdentity(authState.user)}</span>`
-                : authState.ready
+              cloudState.user
+                ? `<span class="chip success">Cloud : ${formatCloudIdentity(cloudState.user)}</span>`
+                : cloudState.ready
                   ? `<span class="chip warning">Cloud : non connecté</span>`
                   : `<span class="chip warning">Supabase non configuré</span>`
             }
@@ -136,8 +147,8 @@ function render() {
             <h2>Cloud Supabase</h2>
             <p class="muted small">Synchronisation cross-device (Spark gratuit). Identifiant + mot de passe.</p>
             ${
-              authState?.user
-                ? `<div class="status ok">Connecté : ${formatCloudIdentity(authState.user)}</div>
+              cloudState?.user
+                ? `<div class="status ok">Connecté : ${formatCloudIdentity(cloudState.user)}</div>
                    <div class="actions">
                      <button class="btn primary" id="cloud-save">Sauvegarder vers cloud</button>
                      <button class="btn ghost" id="cloud-load">Charger depuis cloud</button>
@@ -151,7 +162,7 @@ function render() {
                        <button class="btn primary" id="cloud-login">Connexion</button>
                        <button class="btn ghost" id="cloud-register">Créer un compte</button>
                      </div>
-                     <div class="status ${authState?.error ? "error" : "info"}">${authState?.message ?? "Non connecté"}</div>
+                     <div class="status ${cloudState?.error ? "error" : "info"}">${cloudState?.message ?? "Non connecté"}</div>
                    </div>`
             }
           </section>
@@ -217,10 +228,9 @@ function wire() {
   const avatar = document.getElementById("avatar") as HTMLInputElement | null;
 
   document.getElementById("save-profile")?.addEventListener("click", () => {
-    const authState = getAuthState();
     updateSave((s) => {
       const currentName = s.playerProfile.name;
-      const nextName = authState?.user ? currentName : (name?.value || "Joueur").slice(0, 18);
+      const nextName = cloudState?.user ? currentName : (name?.value || "Joueur").slice(0, 18);
       s.playerProfile.name = nextName;
       s.playerProfile.avatar = (avatar?.value || "🎮").slice(0, 4);
     });
