@@ -218,7 +218,6 @@ function renderAlexBanner(save: SaveState) {
 }
 
 function renderAuthGate() {
-  const profileLink = withBasePath("/apps/profil/", basePath);
   return `
     <div class="layout">
       <header class="card hero auth-gate">
@@ -245,9 +244,8 @@ function renderAuthGate() {
                  <label>Identifiant <input id="gate-identifier" type="text" placeholder="mon-pseudo" /></label>
                  <label>Mot de passe <input id="gate-password" type="password" placeholder="8+ caractères" /></label>
                  <div class="gate-actions">
-                   <button class="btn primary" id="gate-login" ${cloudState.loading ? "disabled" : ""}>Connexion</button>
-                   <button class="btn ghost" id="gate-register" ${cloudState.loading ? "disabled" : ""}>Créer un compte</button>
-                   <a class="btn ghost" href="${profileLink}">Profil</a>
+                   <button class="btn primary strong" id="gate-login" ${cloudState.loading ? "disabled" : ""}>Connexion</button>
+                   <button class="btn ghost strong" id="gate-register" ${cloudState.loading ? "disabled" : ""}>Créer un compte</button>
                  </div>
                  ${
                    cloudState.error
