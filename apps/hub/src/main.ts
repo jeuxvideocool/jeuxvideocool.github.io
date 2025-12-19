@@ -217,6 +217,51 @@ function renderAlexBanner(save: SaveState) {
   `;
 }
 
+function renderAuthGate() {
+  const profileLink = withBasePath("/apps/profil/", basePath);
+  return `
+    <div class="layout">
+      <header class="card hero auth-gate">
+        <div class="hero-glow"></div>
+        <div class="hero-top">
+          <div class="profile">
+            <div class="avatar">🎮</div>
+            <div>
+              <p class="eyebrow">Arcade Galaxy</p>
+              <h1>Connexion requise</h1>
+              <p class="muted">Compte cloud obligatoire pour accéder au hub et lancer les jeux. Identifiant + mot de passe (pas d'email nécessaire).</p>
+              <div class="chips">
+                <span class="chip ${cloudState.ready ? "warning" : "error"}">Cloud : ${
+                  cloudState.ready ? "non connecté" : "Supabase non configuré"
+                }</span>
+                <span class="chip ghost">Saves verrouillées</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        ${
+          cloudState.ready
+            ? `<div class="gate-form">
+                 <label>Identifiant <input id="gate-identifier" type="text" placeholder="mon-pseudo" /></label>
+                 <label>Mot de passe <input id="gate-password" type="password" placeholder="8+ caractères" /></label>
+                 <div class="gate-actions">
+                   <button class="btn primary" id="gate-login" ${cloudState.loading ? "disabled" : ""}>Connexion</button>
+                   <button class="btn ghost" id="gate-register" ${cloudState.loading ? "disabled" : ""}>Créer un compte</button>
+                   <a class="btn ghost" href="${profileLink}">Profil</a>
+                 </div>
+                 ${
+                   cloudState.error
+                     ? `<p class="status error">${cloudState.error}</p>`
+                     : `<p class="status info">Tes saves seront synchronisées entre appareils.</p>`
+                 }
+               </div>`
+            : `<p class="status error">Ajoute VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY puis recharge la page.</p>`
+        }
+      </header>
+    </div>
+  `;
+}
+
 function renderHero() {
   const save = snapshot.save;
   const unlocked = save.achievementsUnlocked.length;
@@ -596,34 +641,8 @@ function renderSaves() {
 
 function renderHub() {
   if (!cloudState.user) {
-    const profileLink = withBasePath("/apps/profil/", basePath);
-    const authLink = withBasePath("/apps/auth/", basePath);
-    app.innerHTML = `
-      <div class="layout">
-        <header class="card hero">
-          <div class="hero-glow"></div>
-          <div class="hero-top">
-            <div class="profile">
-              <div class="avatar">🎮</div>
-              <div>
-                <p class="eyebrow">Arcade Galaxy</p>
-                <h1>Connexion requise</h1>
-                <p class="muted">Un compte cloud est obligatoire pour accéder au hub et lancer les jeux. Identifiant + mot de passe (pas d'email nécessaire).</p>
-                <div class="chips">
-                  <span class="chip warning">Cloud : non connecté</span>
-                  <span class="chip ghost">Saves verrouillées</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="actions hero-actions">
-            <a class="btn primary" href="${profileLink}">Se connecter / Créer un compte</a>
-            <a class="btn ghost" href="${authLink}">Page connexion dédiée</a>
-          </div>
-          <p class="muted small hero-note">La connexion se fait depuis la page Profil (formulaire Supabase).</p>
-        </header>
-      </div>
-    `;
+    app.innerHTML = renderAuthGate();
+    wireAuthGate();
     return;
   }
 
@@ -638,6 +657,27 @@ function renderHub() {
   `;
 
   wireEvents();
+}
+
+function wireAuthGate() {
+  const loginBtn = document.getElementById("gate-login");
+  const registerBtn = document.getElementById("gate-register");
+
+  loginBtn?.addEventListener("click", async () => {
+    const identifier =
+      (document.getElementById("gate-identifier") as HTMLInputElement | null)?.value || "";
+    const password =
+      (document.getElementById("gate-password") as HTMLInputElement | null)?.value || "";
+    await connectCloud("login", { identifier, password });
+  });
+
+  registerBtn?.addEventListener("click", async () => {
+    const identifier =
+      (document.getElementById("gate-identifier") as HTMLInputElement | null)?.value || "";
+    const password =
+      (document.getElementById("gate-password") as HTMLInputElement | null)?.value || "";
+    await connectCloud("register", { identifier, password });
+  });
 }
 
 function wireEvents() {

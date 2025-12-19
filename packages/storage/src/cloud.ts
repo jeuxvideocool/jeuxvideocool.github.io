@@ -1,5 +1,5 @@
 import { createClient, Session, User } from "@supabase/supabase-js";
-import { loadSave, subscribeToSaveChanges, updateSave } from "./index";
+import { importSave, loadSave, subscribeToSaveChanges, updateSave } from "./index";
 import type { SaveState } from "./index";
 
 export type CloudState = {
@@ -21,6 +21,7 @@ const AUTO_SYNC_DELAY_MS = 600;
 let pendingAutoSync: SaveState | null = null;
 let autoSyncTimer: ReturnType<typeof setTimeout> | null = null;
 const PSEUDO_DOMAIN = "user.local";
+let allowAutoSync = true;
 
 type Listener = (state: CloudState) => void;
 const listeners: Listener[] = [];
@@ -82,6 +83,16 @@ function enforceProfileName(identifier: string) {
   });
 }
 
+async function hydrateFromCloud(): Promise<boolean> {
+  if (!supabase || !cloudState.user) return false;
+  const res = await loadCloudSave();
+  if (res?.state) {
+    importSave(JSON.stringify(res.state));
+    return true;
+  }
+  return false;
+}
+
 export async function connectCloud(
   action: AuthAction,
   params?: { email?: string; password?: string; identifier?: string },
@@ -126,6 +137,9 @@ export async function connectCloud(
         session: data.session,
         message: "Connecté",
       };
+      allowAutoSync = false;
+      await hydrateFromCloud();
+      allowAutoSync = true;
     } else if (action === "register") {
       const { data, error } = await auth.signUp({
         email: pseudoEmail,
@@ -140,6 +154,9 @@ export async function connectCloud(
         session: data.session,
         message: "Compte créé (identifiant).",
       };
+      allowAutoSync = false;
+      await hydrateFromCloud();
+      allowAutoSync = true;
     }
   } catch (err: any) {
     cloudState = { ...cloudState, error: err?.message || "Erreur d'auth Supabase" };
@@ -203,7 +220,7 @@ export async function loadCloudSave(): Promise<{ state?: SaveState; error?: stri
 }
 
 function scheduleAutoSync(state: SaveState) {
-  if (!supabase || !cloudState.user) return;
+  if (!supabase || !cloudState.user || !allowAutoSync) return;
   pendingAutoSync = state;
   if (autoSyncTimer) return;
 
@@ -235,7 +252,10 @@ if (supabase) {
     notify();
     if (session?.user) {
       enforceProfileName(extractIdentifier(session.user));
-      scheduleAutoSync(loadSave());
+      allowAutoSync = false;
+      hydrateFromCloud().finally(() => {
+        allowAutoSync = true;
+      });
     }
   });
 }
