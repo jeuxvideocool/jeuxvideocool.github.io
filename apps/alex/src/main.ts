@@ -13,11 +13,11 @@ const pick = <T,>(items: T[]) => items[Math.floor(Math.random() * items.length)]
 if (!canAccessAlexPage(save)) {
   window.location.replace(withBasePath("/", basePath));
 } else {
-  const displayName = save.playerProfile.name || "Alex";
-  const avatar = save.playerProfile.avatar || "✨";
+  const displayName = "Alexiane";
+  const avatar = save.playerProfile.avatar || "💫";
   const xpLabel = save.globalXP.toLocaleString("fr-FR");
   const minXpLabel = ALEX_SECRET.minXP.toLocaleString("fr-FR");
-  const meter = Math.min(100, Math.max(12, Math.round((save.globalXP / (ALEX_SECRET.minXP * 1.3)) * 100)));
+  const meter = Math.min(100, Math.max(12, Math.round((save.globalXP / (ALEX_SECRET.minXP * 1.25)) * 100)));
   const today = new Date().toLocaleDateString("fr-FR", {
     day: "2-digit",
     month: "long",
@@ -25,263 +25,264 @@ if (!canAccessAlexPage(save)) {
   });
 
   const heroLines = [
-    "Ton pseudo a allumé le mode VIP, les serveurs ont applaudi, la page s'est habillée en premium.",
-    "C'est officiel : le moteur d'achievement t'a réservé une édition luxe, designée aux petits oignons.",
-    "On a mis un supplément de style dans l'algorithme, et il a voté pour toi sans hésiter.",
+    "Tu viens de passer en mode prestige : plus de style, zéro filtre.",
+    "On a tenté de faire sobre. Le code a répondu : « Alexiane, impossible ».",
+    "C'est la page secrète qui dit haut et fort que tu as le swag intégré.",
   ];
 
-  const perks = [
-    {
-      icon: "✨",
-      title: "Signature exclusive",
-      text: "Un cachet premium réservé à une seule personne.",
-    },
-    {
-      icon: "🛡️",
-      title: "Bouclier anti-bad vibes",
-      text: "Protection deluxe contre les journées grises, calibrée pour toi.",
-    },
-    {
-      icon: "🏆",
-      title: "Trophée unique",
-      text: "Pièce 1/1 gravée à ton nom. Impossible à copier.",
-    },
-    {
-      icon: "💎",
-      title: "Pass premium XL",
-      text: "Accès illimité aux moments stylés et aux boosts inattendus.",
-    },
+  const committeeLines = [
+    "Vote unanime : garder Alexiane au sommet, ajouter une dose de fun et signer tout de suite.",
+    "Après examen, on confirme : niveau charme 9000, option premium activée.",
+    "Résultat du scan : rareté maximale, humour calibré, classe automatique.",
   ];
 
-  const capsuleItems = [
-    { icon: "🎧", text: "Playlist de victoire (imaginaire mais certifiée stylée)." },
-    { icon: "🪄", text: "Sort bonus : sourire qui déclenche le mode signature." },
-    { icon: "🚀", text: "Accélérateur de bonne vibe à usage illimité." },
+  const psLines = [
+    "Si quelqu'un demande comment tu as débloqué ça, réponds « secret de fabrication ».",
+    "Tu peux revenir ici quand tu veux, c'est ton lounge privé.",
+    "Attention : cette page peut provoquer des sourires incontrôlables.",
   ];
 
-  const signatureTags = ["Édition 1/1", "Premium", "Sur-mesure", "Fun garanti"];
-
-  const fireworks = [
-    { x: 14, y: 18, hue: 36, delay: "0s", size: 180 },
-    { x: 78, y: 16, hue: 188, delay: "0.5s", size: 200 },
-    { x: 60, y: 48, hue: 10, delay: "1.1s", size: 150 },
-    { x: 24, y: 62, hue: 48, delay: "1.7s", size: 190 },
-    { x: 72, y: 70, hue: 112, delay: "2.3s", size: 170 },
-    { x: 42, y: 30, hue: 220, delay: "2.9s", size: 160 },
+  const checklist = [
+    "Sourire naturel : activé",
+    "Style : premium",
+    "Vibes : stables",
+    "Punchlines : prêtes",
   ];
 
-  const streaks = [
-    { x: 8, y: 12, delay: "0s", duration: "8s" },
-    { x: 72, y: 18, delay: "2.5s", duration: "9s" },
-    { x: 30, y: 38, delay: "5s", duration: "10s" },
-  ];
-
-  const confetti = Array.from({ length: 32 }, (_, index) => {
-    const x = (index * 7 + 12) % 100;
-    const size = 6 + (index % 7);
-    const duration = 8 + (index % 6);
-    const delay = (index * 0.35).toFixed(2);
-    const hue = (index * 32 + 20) % 360;
-    const fall = 120 + (index % 5) * 10;
-    const rotate = (index % 2 === 0 ? 320 : -320) + index * 9;
-    const sway = (index % 2 === 0 ? 18 : -18) + (index % 5);
-    const round = index % 3 === 0 ? "999px" : "4px";
-
-    return {
-      x,
-      size,
-      duration,
-      delay,
-      hue,
-      fall,
-      rotate,
-      sway,
-      round,
-    };
-  });
+  const badges = ["Édition 1/1", "Validé par le comité", "Premium certifié"];
 
   const backLink = withBasePath("/", basePath);
   const profileLink = withBasePath("/apps/profil/", basePath);
-  const auraRays = Array.from({ length: 10 }, (_, index) => ({
-    rotate: index * 36,
-    delay: `${(index * 0.25).toFixed(2)}s`,
-  }));
-  const tickerText = `${displayName} — Édition Surprise — Premium — Achievement unique — ${minXpLabel} XP —`;
 
   app.innerHTML = `
     <div class="page">
+      <canvas id="fireworks" class="fireworks" aria-hidden="true"></canvas>
       <div class="backdrop" aria-hidden="true">
-        <div class="aurora"></div>
-        <div class="halo halo-a"></div>
-        <div class="halo halo-b"></div>
-        <div class="halo halo-c"></div>
-        <div class="laser-grid"></div>
-        <div class="spotlight"></div>
-      </div>
-      <div class="spark-sweep" aria-hidden="true"></div>
-      <div class="streaks" aria-hidden="true">
-        ${streaks
-          .map(
-            (streak) =>
-              `<span class="streak" style="--x:${streak.x}%; --y:${streak.y}%; --delay:${streak.delay}; --duration:${streak.duration};"></span>`
-          )
-          .join("")}
-      </div>
-      <div class="confetti" aria-hidden="true">
-        ${confetti
-          .map(
-            (piece) =>
-              `<span class="confetti-piece" style="--x:${piece.x}%; --size:${piece.size}px; --duration:${piece.duration}s; --delay:${piece.delay}s; --hue:${piece.hue}; --fall:${piece.fall}vh; --rotate:${piece.rotate}deg; --sway:${piece.sway}; --round:${piece.round};"></span>`
-          )
-          .join("")}
-      </div>
-      <div class="fireworks" aria-hidden="true">
-        ${fireworks
-          .map(
-            (fw) =>
-              `<span class="firework" style="--x:${fw.x}%; --y:${fw.y}%; --hue:${fw.hue}; --delay:${fw.delay}; --size:${fw.size}px;"></span>`
-          )
-          .join("")}
+        <span class="glow glow-a"></span>
+        <span class="glow glow-b"></span>
+        <span class="glow glow-c"></span>
+        <span class="backdrop-grid"></span>
       </div>
 
       <main class="shell">
-        <nav class="topbar reveal" style="--delay: 0.05s">
-          <div class="brand">
-            <span class="badge">Achievement débloqué</span>
-            <span class="brand-title">Surprise Alex · Édition ultra-personnalisée</span>
+        <nav class="topbar">
+          <div class="topbar-left">
+            <span class="tag">Achievement exclusif</span>
+            <span class="topbar-title">Alexiane · Édition sur-mesure</span>
           </div>
-          <div class="seal">
+          <div class="topbar-right">
             <span>ID secret</span>
             <strong>${ALEX_SECRET.achievementId}</strong>
           </div>
         </nav>
 
-        <header class="hero reveal" style="--delay: 0.12s">
-          <div class="hero-main">
+        <header class="hero">
+          <div class="hero-content">
             <p class="overline">Accès validé · ${minXpLabel} XP</p>
             <h1>
-              ${avatar} ${displayName}, l'édition <span class="highlight">Surprise Premium</span> est activée.
+              ${avatar} ${displayName}, tu as débloqué la version <span>Prestige</span>.
             </h1>
-            <p class="sub">
-              ${pick(heroLines)} C'est un achievement unique, calibré pour une seule personne : toi.
+            <p class="lead">
+              ${pick(heroLines)} Une page pensée pour une seule personne : toi.
             </p>
             <div class="hero-actions">
               <a class="btn primary" href="${backLink}">Retour au hub</a>
-              <a class="btn ghost" href="${profileLink}">Ton profil</a>
+              <a class="btn ghost" href="${profileLink}">Voir le profil</a>
             </div>
-            <div class="hero-meta">
-              <span class="chip">XP ${xpLabel}</span>
-              <span class="chip">Premium garanti</span>
-              <span class="chip">Mode Signature</span>
+            <div class="chips">
+              <span>XP ${xpLabel}</span>
+              <span>VIP réel</span>
+              <span>Signature moderne</span>
             </div>
           </div>
-          <aside class="hero-card">
-            <div class="hero-card-top">
-              <div class="avatar-ring">
-                <div class="avatar">${avatar}</div>
-              </div>
-              <div class="hero-id">
-                <p class="label">Propriétaire officiel</p>
+          <aside class="hero-panel">
+            <div class="profile">
+              <div class="avatar">${avatar}</div>
+              <div class="profile-info">
+                <span>Propriétaire officielle</span>
                 <strong>${displayName}</strong>
-                <span class="small">Cachet ${today}</span>
+                <em>Cachet du ${today}</em>
               </div>
             </div>
-            <div class="meter-ring" style="--value:${meter}">
-              <span>${meter}%</span>
-              <p>Hype meter</p>
+            <div class="meter">
+              <div class="meter-bar"><span style="width: ${meter}%"></span></div>
+              <div class="meter-meta">
+                <span>Prestige</span>
+                <strong>${meter}%</strong>
+              </div>
             </div>
-            <div class="hero-stats">
-              <div class="stat">
-                <span>XP total</span>
-                <strong>${xpLabel}</strong>
-              </div>
-              <div class="stat">
-                <span>Statut</span>
-                <strong>Édition unique</strong>
-              </div>
-              <div class="stat">
-                <span>Aura</span>
-                <strong>Aura signature</strong>
-              </div>
+            <div class="badge-row">
+              ${badges.map((badge) => `<span>${badge}</span>`).join("")}
             </div>
           </aside>
         </header>
 
-        <section class="moment reveal" style="--delay: 0.2s">
-          <article class="card aura-card" aria-hidden="true">
-            <div class="aura-core"></div>
-            <div class="aura-ring"></div>
-            <div class="aura-ring alt"></div>
-            <div class="aura-rays">
-              ${auraRays
-                .map(
-                  (ray) =>
-                    `<span style="--rotate:${ray.rotate}deg; --delay:${ray.delay};"></span>`
-                )
-                .join("")}
-            </div>
-          </article>
-          <article class="card capsule-card">
+        <section class="cards-grid">
+          <article class="card card-accent">
             <div class="card-head">
-              <span class="pill">Capsule secrète</span>
-              <h2>Boost instantané</h2>
+              <span class="pill">Comité secret</span>
+              <h2>Décision officielle</h2>
             </div>
-            <p class="capsule-text">
-              Tout est calibré pour un boost immédiat : intensité, énergie et bonne vibe en édition ${displayName}.
+            <p>${pick(committeeLines)}</p>
+            <div class="card-tags">
+              <span>Validé</span>
+              <span>Drôle</span>
+              <span>Premium</span>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <span class="pill">Checklist</span>
+              <h2>Version Alexiane</h2>
+            </div>
+            <ul>
+              ${checklist.map((item) => `<li>${item}</li>`).join("")}
+            </ul>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <span class="pill">Message privé</span>
+              <h2>Mot doux calibré</h2>
+            </div>
+            <p>
+              Tu es la preuve qu'on peut être drôle, brillante et ultra stylée en même temps.
+              On a donc mis tout ça au propre, en version premium.
             </p>
-            <div class="capsule-list">
-              ${capsuleItems
-                .map(
-                  (item) =>
-                    `<div class="capsule-item"><span>${item.icon}</span><p>${item.text}</p></div>`
-                )
-                .join("")}
-            </div>
+            <div class="signature">— L'équipe (qui note tout)</div>
           </article>
         </section>
 
-        <section class="perks-grid reveal" style="--delay: 0.28s">
-          ${perks
-            .map(
-              (perk) => `
-              <article class="perk-card">
-                <div class="perk-icon">${perk.icon}</div>
-                <h3>${perk.title}</h3>
-                <p>${perk.text}</p>
-              </article>
-            `
-            )
-            .join("")}
-        </section>
-
-        <section class="card message-card reveal" style="--delay: 0.36s">
-          <div class="message-main">
-            <span class="pill">Message perso</span>
-            <h3>Spotlight sur ${displayName}</h3>
-            <p>
-              Ici, ${displayName}, tu es la tête d'affiche. Cette page est un coffre-fort d'énergie positive :
-              ouverte 24/7, jamais en rupture de style, toujours en mode premium.
-            </p>
-            <div class="message-tags">
-              ${signatureTags.map((tag) => `<span>${tag}</span>`).join("")}
-            </div>
+        <section class="callout">
+          <div>
+            <span class="callout-label">PS</span>
+            <p>${pick(psLines)}</p>
           </div>
-          <div class="message-side">
-            <div class="stamp">
-              <span>VIP</span>
-              <em>Édition 1/1</em>
-            </div>
-            <p class="signature">Signature officielle : ${displayName}</p>
-          </div>
-        </section>
-
-        <section class="ticker reveal" style="--delay: 0.44s" aria-hidden="true">
-          <div class="ticker-track">
-            <span>${tickerText}</span>
-            <span>${tickerText}</span>
+          <div class="callout-seal">
+            <span>${displayName}</span>
+            <em>Édition prestige</em>
           </div>
         </section>
       </main>
     </div>
   `;
+
+  startFireworks();
+}
+
+function startFireworks() {
+  const canvas = document.getElementById("fireworks") as HTMLCanvasElement | null;
+  if (!canvas) return;
+
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (prefersReducedMotion) return;
+
+  const context = canvas.getContext("2d");
+  if (!context) return;
+
+  let width = 0;
+  let height = 0;
+  let devicePixelRatio = 1;
+
+  const colors = ["#ffd27a", "#6de3ff", "#ff89c4", "#ffe96b", "#8dffb0"];
+  const particles: {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    alpha: number;
+    decay: number;
+    size: number;
+    color: string;
+  }[] = [];
+
+  const resize = () => {
+    devicePixelRatio = Math.min(2, window.devicePixelRatio || 1);
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = Math.round(width * devicePixelRatio);
+    canvas.height = Math.round(height * devicePixelRatio);
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    context.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  };
+
+  const burst = (x: number, y: number, power = 1) => {
+    const count = Math.round(60 * power);
+    for (let i = 0; i < count; i += 1) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = (Math.random() * 3 + 2.2) * power;
+      const size = Math.random() * 2 + 1.4;
+      particles.push({
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        alpha: 1,
+        decay: 0.012 + Math.random() * 0.016,
+        size,
+        color: colors[Math.floor(Math.random() * colors.length)],
+      });
+    }
+  };
+
+  let animating = false;
+
+  const tick = () => {
+    context.clearRect(0, 0, width, height);
+    context.globalCompositeOperation = "lighter";
+
+    for (let i = particles.length - 1; i >= 0; i -= 1) {
+      const particle = particles[i];
+      particle.vy += 0.04;
+      particle.vx *= 0.98;
+      particle.vy *= 0.98;
+      particle.x += particle.vx;
+      particle.y += particle.vy;
+      particle.alpha -= particle.decay;
+
+      if (particle.alpha <= 0) {
+        particles.splice(i, 1);
+        continue;
+      }
+
+      context.globalAlpha = particle.alpha;
+      context.fillStyle = particle.color;
+      context.beginPath();
+      context.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+      context.fill();
+    }
+
+    if (particles.length > 0) {
+      requestAnimationFrame(tick);
+    } else {
+      animating = false;
+    }
+  };
+
+  const launch = () => {
+    if (!animating) {
+      animating = true;
+      requestAnimationFrame(tick);
+    }
+  };
+
+  resize();
+  window.addEventListener("resize", resize);
+
+  const sequence = [
+    { delay: 0, x: 0.2, y: 0.32, power: 1.2 },
+    { delay: 180, x: 0.5, y: 0.22, power: 1.4 },
+    { delay: 360, x: 0.8, y: 0.3, power: 1.2 },
+    { delay: 700, x: 0.35, y: 0.45, power: 1.05 },
+    { delay: 920, x: 0.68, y: 0.4, power: 1.15 },
+  ];
+
+  sequence.forEach((shot) => {
+    window.setTimeout(() => {
+      burst(width * shot.x, height * shot.y, shot.power);
+      launch();
+    }, shot.delay);
+  });
 }
