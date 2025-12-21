@@ -138,7 +138,10 @@ export function loadSave(): SaveState {
 
 export function persistSave(state: SaveState) {
   const payload = { ...state, schemaVersion: CURRENT_SCHEMA_VERSION };
-  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
+  const nextRaw = JSON.stringify(payload);
+  const currentRaw = localStorage.getItem(LOCAL_STORAGE_KEY);
+  if (currentRaw === nextRaw) return;
+  localStorage.setItem(LOCAL_STORAGE_KEY, nextRaw);
   notifySaveListeners(payload);
 }
 
