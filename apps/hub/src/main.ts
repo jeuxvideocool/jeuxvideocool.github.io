@@ -213,7 +213,7 @@ function handleExport() {
   showToast("Sauvegarde exportée", "success");
 }
 
-function handleImport(text: string) {
+async function handleImport(text: string) {
   const result = importSave(text);
   if (result.success) {
     showToast("Import réussi", "success");
@@ -221,6 +221,17 @@ function handleImport(text: string) {
     profileAvatarFile = null;
     profileAvatarReset = false;
     refresh();
+    if (cloudState.user) {
+      try {
+        const ok = await saveCloud(snapshot.save, { allowEmpty: true });
+        showToast(ok ? "Sauvegarde cloud remplacée" : cloudState.error || "Erreur cloud", ok ? "success" : "error");
+      } catch (err) {
+        console.error("Cloud save failed after import", err);
+        showToast("Erreur cloud", "error");
+      }
+    } else if (cloudState.ready) {
+      showToast("Connecte-toi pour envoyer l'import sur le cloud", "info");
+    }
   } else {
     showToast(result.error || "Import impossible", "error");
   }

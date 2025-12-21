@@ -469,7 +469,7 @@ function wire() {
     render();
   });
 
-  document.getElementById("import-btn")?.addEventListener("click", () => {
+  document.getElementById("import-btn")?.addEventListener("click", async () => {
     const text = (document.getElementById("import") as HTMLTextAreaElement | null)?.value || "";
     const res = importSave(text);
     if (res.success) {
@@ -481,6 +481,20 @@ function wire() {
       pendingAvatarReset = false;
       showToast("Import réussi", "success");
       render();
+      if (cloudState.user) {
+        try {
+          const ok = await saveCloud(currentSnapshot.save, { allowEmpty: true });
+          showToast(
+            ok ? "Sauvegarde cloud remplacée" : cloudState.error || "Erreur cloud",
+            ok ? "success" : "error",
+          );
+        } catch (err) {
+          console.error("Cloud save failed after import", err);
+          showToast("Erreur cloud", "error");
+        }
+      } else if (cloudState.ready) {
+        showToast("Connecte-toi pour envoyer l'import sur le cloud", "info");
+      }
     } else {
       showToast(res.error || "Import impossible", "error");
     }
