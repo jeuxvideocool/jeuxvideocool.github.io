@@ -8,55 +8,136 @@ const app = document.getElementById("app")!;
 const snapshot = getProgressionSnapshot();
 const save = snapshot.save;
 
+const pick = <T,>(items: T[]) => items[Math.floor(Math.random() * items.length)];
+
 if (!canAccessAlexPage(save)) {
   window.location.replace(withBasePath("/", basePath));
 } else {
   const displayName = save.playerProfile.name || "Alex";
   const avatar = save.playerProfile.avatar || "✨";
+  const xpLabel = save.globalXP.toLocaleString("fr-FR");
+  const minXpLabel = ALEX_SECRET.minXP.toLocaleString("fr-FR");
+  const meter = Math.min(100, Math.max(12, Math.round((save.globalXP / (ALEX_SECRET.minXP * 1.3)) * 100)));
+  const today = new Date().toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+
+  const heroLines = [
+    "Ton pseudo a allumé le mode VIP, les serveurs ont applaudi, la page s'est habillée en premium.",
+    "C'est officiel : le moteur d'achievement t'a réservé une édition luxe, designée aux petits oignons.",
+    "On a mis des paillettes dans l'algorithme, et il a voté pour toi sans hésiter.",
+  ];
+
+  const wowLines = [
+    "Ce n'est pas un bug, c'est l'effet Alex. Et il est irréversible.",
+    "Même les confettis ont demandé ton autographe.",
+    "Le bouton WOW est coincé sur ON, personne n'ose l'éteindre.",
+  ];
 
   const perks = [
-    "Accès VIP activé : le hub te déroule un tapis de lumière.",
-    "Boost infini de bonne vibe, calibré sur ton énergie.",
-    "Droit permanent au mode légende dans toutes les conversations.",
+    {
+      icon: "🎆",
+      title: "Feu d'artifice on-demand",
+      text: "Effets spéciaux premium à activer dès que tu veux briller.",
+    },
+    {
+      icon: "🛡️",
+      title: "Bouclier anti-bad vibes",
+      text: "Protection deluxe contre les journées grises, calibrée pour toi.",
+    },
+    {
+      icon: "🏆",
+      title: "Trophée unique",
+      text: "Pièce 1/1 gravée à ton nom. Impossible à copier.",
+    },
+    {
+      icon: "💎",
+      title: "Pass premium XL",
+      text: "Accès illimité aux moments stylés et aux boosts inattendus.",
+    },
   ];
 
-  const punchlines = [
-    "Ce n'est pas un simple cadeau, c'est une page secrète calibrée pour toi.",
-    "Mode premium débloqué : lumière, musique, et zéro limite.",
-    "Tu viens de déclencher un feu d'artifice rien qu'avec ta présence.",
+  const capsuleItems = [
+    { icon: "🎧", text: "Playlist de victoire (imaginaire mais certifiée stylée)." },
+    { icon: "🪄", text: "Sort bonus : sourire qui déclenche les paillettes." },
+    { icon: "🚀", text: "Accélérateur de bonne vibe à usage illimité." },
   ];
 
-  const keepsakes = [
-    { icon: "⚡️", text: "Un vœu premium à activer quand tu veux." },
-    { icon: "🎆", text: "Une ovation cosmique réservée." },
-    { icon: "💎", text: "Un badge rare qui brille même en mode silencieux." },
-  ];
+  const signatureTags = ["Édition 1/1", "Premium", "Sur-mesure", "Fun garanti"];
 
   const fireworks = [
-    { x: 12, y: 18, hue: 38, delay: "0s", size: 150 },
-    { x: 82, y: 20, hue: 195, delay: "0.6s", size: 170 },
-    { x: 68, y: 54, hue: 300, delay: "1.2s", size: 130 },
-    { x: 22, y: 62, hue: 12, delay: "1.6s", size: 160 },
-    { x: 55, y: 32, hue: 95, delay: "2s", size: 140 },
-    { x: 40, y: 78, hue: 240, delay: "2.6s", size: 180 },
+    { x: 14, y: 18, hue: 36, delay: "0s", size: 180 },
+    { x: 78, y: 16, hue: 188, delay: "0.5s", size: 200 },
+    { x: 60, y: 48, hue: 10, delay: "1.1s", size: 150 },
+    { x: 24, y: 62, hue: 48, delay: "1.7s", size: 190 },
+    { x: 72, y: 70, hue: 112, delay: "2.3s", size: 170 },
+    { x: 42, y: 30, hue: 220, delay: "2.9s", size: 160 },
   ];
 
-  const meter = Math.min(100, Math.max(18, Math.round((save.globalXP / (ALEX_SECRET.minXP * 1.4)) * 100)));
+  const streaks = [
+    { x: 8, y: 12, delay: "0s", duration: "8s" },
+    { x: 72, y: 18, delay: "2.5s", duration: "9s" },
+    { x: 30, y: 38, delay: "5s", duration: "10s" },
+  ];
+
+  const confetti = Array.from({ length: 32 }, (_, index) => {
+    const x = (index * 7 + 12) % 100;
+    const size = 6 + (index % 7);
+    const duration = 8 + (index % 6);
+    const delay = (index * 0.35).toFixed(2);
+    const hue = (index * 32 + 20) % 360;
+    const fall = 120 + (index % 5) * 10;
+    const rotate = (index % 2 === 0 ? 320 : -320) + index * 9;
+    const sway = (index % 2 === 0 ? 18 : -18) + (index % 5);
+    const round = index % 3 === 0 ? "999px" : "4px";
+
+    return {
+      x,
+      size,
+      duration,
+      delay,
+      hue,
+      fall,
+      rotate,
+      sway,
+      round,
+    };
+  });
 
   const backLink = withBasePath("/", basePath);
   const profileLink = withBasePath("/apps/profil/", basePath);
+  const tickerText = `${displayName} — Édition Surprise — Feu d'artifice — Premium — Achievement unique — ${minXpLabel} XP —`;
 
   app.innerHTML = `
     <div class="page">
-      <div class="background">
-        <div class="orb orb-a"></div>
-        <div class="orb orb-b"></div>
-        <div class="orb orb-c"></div>
-        <div class="grid-lines"></div>
-        <div class="light-beam"></div>
+      <div class="backdrop" aria-hidden="true">
+        <div class="aurora"></div>
+        <div class="halo halo-a"></div>
+        <div class="halo halo-b"></div>
+        <div class="halo halo-c"></div>
+        <div class="laser-grid"></div>
+        <div class="spotlight"></div>
       </div>
-      <div class="sparkles"></div>
-      <div class="fireworks">
+      <div class="spark-sweep" aria-hidden="true"></div>
+      <div class="streaks" aria-hidden="true">
+        ${streaks
+          .map(
+            (streak) =>
+              `<span class="streak" style="--x:${streak.x}%; --y:${streak.y}%; --delay:${streak.delay}; --duration:${streak.duration};"></span>`
+          )
+          .join("")}
+      </div>
+      <div class="confetti" aria-hidden="true">
+        ${confetti
+          .map(
+            (piece) =>
+              `<span class="confetti-piece" style="--x:${piece.x}%; --size:${piece.size}px; --duration:${piece.duration}s; --delay:${piece.delay}s; --hue:${piece.hue}; --fall:${piece.fall}vh; --rotate:${piece.rotate}deg; --sway:${piece.sway}; --round:${piece.round};"></span>`
+          )
+          .join("")}
+      </div>
+      <div class="fireworks" aria-hidden="true">
         ${fireworks
           .map(
             (fw) =>
@@ -65,112 +146,138 @@ if (!canAccessAlexPage(save)) {
           .join("")}
       </div>
 
-      <main class="wrap">
-        <header class="hero">
-          <div class="hero-left">
-            <span class="eyebrow">Attention secrète · ${ALEX_SECRET.minXP} XP</span>
+      <main class="shell">
+        <nav class="topbar reveal" style="--delay: 0.05s">
+          <div class="brand">
+            <span class="badge">Achievement débloqué</span>
+            <span class="brand-title">Surprise Alex · Édition ultra-personnalisée</span>
+          </div>
+          <div class="seal">
+            <span>ID secret</span>
+            <strong>${ALEX_SECRET.achievementId}</strong>
+          </div>
+        </nav>
+
+        <header class="hero reveal" style="--delay: 0.12s">
+          <div class="hero-main">
+            <p class="overline">Accès validé · ${minXpLabel} XP</p>
             <h1>
-              ${avatar} <span class="hero-name">${displayName}</span>,
-              <span class="gradient-text">version premium</span> activée
+              ${avatar} ${displayName}, l'édition <span class="highlight">Surprise Premium</span> est activée.
             </h1>
-            <p class="lead">
-              ${punchlines[Math.floor(Math.random() * punchlines.length)]}
-              Une page spéciale pour une personne qui met des étincelles partout.
+            <p class="sub">
+              ${pick(heroLines)} C'est un achievement unique, calibré pour une seule personne : toi.
             </p>
-            <div class="cta-row">
+            <div class="hero-actions">
               <a class="btn primary" href="${backLink}">Retour au hub</a>
-              <a class="btn ghost" href="${profileLink}">Voir ton profil</a>
+              <a class="btn ghost" href="${profileLink}">Ton profil</a>
             </div>
-            <div class="stat-row">
+            <div class="hero-meta">
+              <span class="chip">XP ${xpLabel}</span>
+              <span class="chip">Premium garanti</span>
+              <span class="chip">Mode Wouahou</span>
+            </div>
+          </div>
+          <aside class="hero-card">
+            <div class="hero-card-top">
+              <div class="avatar-ring">
+                <div class="avatar">${avatar}</div>
+              </div>
+              <div class="hero-id">
+                <p class="label">Propriétaire officiel</p>
+                <strong>${displayName}</strong>
+                <span class="small">Cachet ${today}</span>
+              </div>
+            </div>
+            <div class="meter-ring" style="--value:${meter}">
+              <span>${meter}%</span>
+              <p>Hype meter</p>
+            </div>
+            <div class="hero-stats">
               <div class="stat">
-                <span class="stat-label">XP actuel</span>
-                <strong>${save.globalXP.toLocaleString("fr-FR")} XP</strong>
+                <span>XP total</span>
+                <strong>${xpLabel}</strong>
               </div>
               <div class="stat">
-                <span class="stat-label">Mode</span>
-                <strong>Ultra stylé</strong>
+                <span>Statut</span>
+                <strong>Édition unique</strong>
               </div>
               <div class="stat">
-                <span class="stat-label">Aura</span>
+                <span>Aura</span>
                 <strong>Feu d'artifice</strong>
               </div>
             </div>
-          </div>
-          <div class="hero-right">
-            <div class="profile-card">
-              <div class="profile-top">
-                <div class="profile-avatar">${avatar}</div>
-                <div>
-                  <p class="label">Pseudo validé</p>
-                  <strong>${displayName}</strong>
-                </div>
-              </div>
-              <div class="profile-meter">
-                <div class="meter">
-                  <span style="width: ${meter}%"></span>
-                </div>
-                <p class="meter-label">Niveau secret débloqué</p>
-              </div>
-              <div class="profile-tags">
-                <span>VIP</span>
-                <span>Ultra rare</span>
-                <span>Glow mode</span>
-              </div>
-            </div>
-            <div class="mini-card">
-              <p class="mini-title">Capsule surprise</p>
-              <p class="mini-text">
-                Des éclats, des lumières et un message ultra perso à injecter quand tu veux.
-              </p>
-              <div class="mini-icons">
-                <span>✨</span>
-                <span>🎆</span>
-                <span>💫</span>
-              </div>
-            </div>
-          </div>
+          </aside>
         </header>
 
-        <section class="grid">
-          <article class="glass-card">
-            <div class="card-header">
-              <span class="pill ghost">Boosts premium</span>
-              <h3>Pack d'attentions</h3>
+        <section class="moment reveal" style="--delay: 0.2s">
+          <article class="card wow-card">
+            <div class="wow-burst"></div>
+            <p class="mini-label">Effet WOUAHOU</p>
+            <div class="wow-text">WOUAHOU</div>
+            <p class="wow-line">${pick(wowLines)}</p>
+            <div class="wow-footer">
+              <span class="spark-chip">Spectaculaire</span>
+              <span class="spark-chip">Ultra perso</span>
             </div>
-            <ul class="perks">
-              ${perks.map((perk) => `<li><span>🎁</span>${perk}</li>`).join("")}
-            </ul>
           </article>
-
-          <article class="glass-card wide">
-            <div class="card-header">
-              <span class="pill ghost">Message central</span>
-              <h3>Version étoilée</h3>
+          <article class="card capsule-card">
+            <div class="card-head">
+              <span class="pill">Capsule secrète</span>
+              <h2>Boost instantané</h2>
             </div>
-            <p class="vibe">
-              Ici, ${displayName}, tu es la tête d'affiche. Ce cadeau n'a pas besoin d'occasion officielle :
-              il existe juste pour dire "tu comptes" en version grand format.
+            <p class="capsule-text">
+              Tout est calibré pour un boost immédiat : lumière, confettis et bonne vibe en édition ${displayName}.
             </p>
-            <div class="callout">PS : les paillettes sont intégrées, impossible de les désactiver.</div>
-          </article>
-
-          <article class="glass-card">
-            <div class="card-header">
-              <span class="pill ghost">À garder</span>
-              <h3>Talismans</h3>
-            </div>
-            <div class="mini-list">
-              ${keepsakes
-                .map((item) => `<div><span class="tag">${item.icon}</span>${item.text}</div>`)
+            <div class="capsule-list">
+              ${capsuleItems
+                .map(
+                  (item) =>
+                    `<div class="capsule-item"><span>${item.icon}</span><p>${item.text}</p></div>`
+                )
                 .join("")}
             </div>
           </article>
         </section>
 
-        <section class="ticker" aria-hidden="true">
+        <section class="perks-grid reveal" style="--delay: 0.28s">
+          ${perks
+            .map(
+              (perk) => `
+              <article class="perk-card">
+                <div class="perk-icon">${perk.icon}</div>
+                <h3>${perk.title}</h3>
+                <p>${perk.text}</p>
+              </article>
+            `
+            )
+            .join("")}
+        </section>
+
+        <section class="card message-card reveal" style="--delay: 0.36s">
+          <div class="message-main">
+            <span class="pill">Message perso</span>
+            <h3>Spotlight sur ${displayName}</h3>
+            <p>
+              Ici, ${displayName}, tu es la tête d'affiche. Cette page est un coffre-fort d'énergie positive :
+              ouverte 24/7, jamais en rupture de style, toujours en mode premium.
+            </p>
+            <div class="message-tags">
+              ${signatureTags.map((tag) => `<span>${tag}</span>`).join("")}
+            </div>
+          </div>
+          <div class="message-side">
+            <div class="stamp">
+              <span>VIP</span>
+              <em>Édition 1/1</em>
+            </div>
+            <p class="signature">Signature officielle : ${displayName}</p>
+          </div>
+        </section>
+
+        <section class="ticker reveal" style="--delay: 0.44s" aria-hidden="true">
           <div class="ticker-track">
-            <span>Alex — Premium — Surprise — Feu d'artifice — Edition secrète —</span>
-            <span>Alex — Premium — Surprise — Feu d'artifice — Edition secrète —</span>
+            <span>${tickerText}</span>
+            <span>${tickerText}</span>
           </div>
         </section>
       </main>
