@@ -136,11 +136,11 @@ export function loadSave(): SaveState {
   }
 }
 
-export function persistSave(state: SaveState) {
+export function persistSave(state: SaveState, options?: { force?: boolean }) {
   const payload = { ...state, schemaVersion: CURRENT_SCHEMA_VERSION };
   const nextRaw = JSON.stringify(payload);
   const currentRaw = localStorage.getItem(LOCAL_STORAGE_KEY);
-  if (currentRaw === nextRaw) return;
+  if (!options?.force && currentRaw === nextRaw) return;
   localStorage.setItem(LOCAL_STORAGE_KEY, nextRaw);
   notifySaveListeners(payload);
 }
@@ -171,7 +171,7 @@ export function importSave(json: string): { success: boolean; error?: string; st
 
 export function resetSave() {
   const empty = createEmptySave();
-  persistSave(empty);
+  persistSave(empty, { force: true });
   return empty;
 }
 

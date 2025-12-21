@@ -9,6 +9,7 @@ import {
   getAvatarPublicUrl,
   getAuthState,
   loadCloudSave,
+  requestCloudResetSync,
   saveCloud,
   subscribe as subscribeCloud,
   uploadAvatarImage,
@@ -456,6 +457,7 @@ function wire() {
   });
 
   document.getElementById("reset")?.addEventListener("click", () => {
+    requestCloudResetSync();
     resetSave();
     pendingAvatarFile = null;
     if (pendingAvatarPreview) {
@@ -485,6 +487,7 @@ function wire() {
   });
 
   document.getElementById("reset-save")?.addEventListener("click", () => {
+    requestCloudResetSync();
     resetSave();
     showToast("Sauvegarde locale réinitialisée", "info");
     render();

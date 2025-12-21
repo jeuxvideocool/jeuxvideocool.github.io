@@ -15,6 +15,7 @@ import {
   getAvatarPublicUrl,
   getAuthState,
   loadCloudSave,
+  requestCloudResetSync,
   saveCloud,
   subscribe as subscribeCloud,
   uploadAvatarImage,
@@ -226,6 +227,7 @@ function handleImport(text: string) {
 }
 
 function handleReset(gameId?: string) {
+  requestCloudResetSync();
   if (gameId) {
     resetGameSave(gameId);
     showToast(`Progression de ${gameId} réinitialisée`, "info");

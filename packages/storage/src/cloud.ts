@@ -14,6 +14,11 @@ export type CloudState = {
   lastSyncedAt?: number;
 };
 
+type SaveCloudOptions = {
+  allowEmpty?: boolean;
+  silent?: boolean;
+};
+
 let supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 let supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 let supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
@@ -21,9 +26,11 @@ let supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKe
 let cloudState: CloudState = { ready: Boolean(supabase), user: null };
 const AUTO_SYNC_DELAY_MS = 600;
 let pendingAutoSync: SaveState | null = null;
+let pendingAutoSyncForce = false;
 let autoSyncTimer: ReturnType<typeof setTimeout> | null = null;
 const PSEUDO_DOMAIN = "user.local";
 let allowAutoSync = true;
+let forceNextCloudSync = false;
 
 type Listener = (state: CloudState) => void;
 const listeners: Listener[] = [];
@@ -51,6 +58,10 @@ function requireClient(): boolean {
 
 export function getAuthState(): CloudState {
   return cloudState;
+}
+
+export function requestCloudResetSync() {
+  forceNextCloudSync = true;
 }
 
 export function getAvatarPublicUrl(path?: string | null): string | null {
@@ -102,6 +113,21 @@ async function hydrateFromCloud(): Promise<boolean> {
   return false;
 }
 
+function isEmptySave(save: SaveState): boolean {
+  if (save.globalXP > 0) return false;
+  if (save.globalLevel > 1) return false;
+  if (save.achievementsUnlocked.length > 0) return false;
+  if (Object.keys(save.games || {}).length > 0) return false;
+  const stats = save.globalStats;
+  if (stats.gamesPlayed > 0) return false;
+  if (stats.totalSessions > 0) return false;
+  if ((stats.timePlayedMs ?? 0) > 0) return false;
+  if (stats.currentSessionStartedAt) return false;
+  if (Object.keys(stats.events || {}).length > 0) return false;
+  if (Object.keys(stats.streaks || {}).length > 0) return false;
+  return true;
+}
+
 export async function connectCloud(
   action: AuthAction,
   params?: { email?: string; password?: string; identifier?: string },
@@ -113,6 +139,8 @@ export async function connectCloud(
     notify();
     await supabase!.auth.signOut();
     pendingAutoSync = null;
+    pendingAutoSyncForce = false;
+    forceNextCloudSync = false;
     if (autoSyncTimer) {
       clearTimeout(autoSyncTimer);
       autoSyncTimer = null;
@@ -179,11 +207,23 @@ export async function connectCloud(
   return cloudState;
 }
 
-export async function saveCloud(save: SaveState): Promise<boolean> {
+export async function saveCloud(save: SaveState, options: SaveCloudOptions = {}): Promise<boolean> {
   if (!requireClient()) return false;
   if (!cloudState.user) {
     cloudState = { ...cloudState, error: "Connecte-toi pour synchroniser." };
     notify();
+    return false;
+  }
+  if (!options.allowEmpty && isEmptySave(save)) {
+    if (!options.silent) {
+      cloudState = {
+        ...cloudState,
+        error: "Sauvegarde vide. Joue ou fais un reset pour synchroniser.",
+        message: undefined,
+        loading: false,
+      };
+      notify();
+    }
     return false;
   }
   cloudState = { ...cloudState, loading: true, error: undefined, message: undefined };
@@ -273,16 +313,22 @@ export async function removeAvatarImage(path?: string) {
 
 function scheduleAutoSync(state: SaveState) {
   if (!supabase || !cloudState.user || !allowAutoSync) return;
+  const isEmpty = isEmptySave(state);
+  if (isEmpty && !forceNextCloudSync) return;
   pendingAutoSync = state;
+  pendingAutoSyncForce = pendingAutoSyncForce || forceNextCloudSync;
+  forceNextCloudSync = false;
   if (autoSyncTimer) return;
 
   autoSyncTimer = setTimeout(async () => {
     autoSyncTimer = null;
     if (!pendingAutoSync) return;
     const payload = pendingAutoSync;
+    const allowEmpty = pendingAutoSyncForce;
     pendingAutoSync = null;
+    pendingAutoSyncForce = false;
     if (!supabase || !cloudState.user) return;
-    await saveCloud(payload);
+    await saveCloud(payload, { allowEmpty, silent: true });
   }, AUTO_SYNC_DELAY_MS);
 }
 
