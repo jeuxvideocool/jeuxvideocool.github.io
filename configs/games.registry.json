@@ -90,6 +90,16 @@
       "previewEmoji": "🧱",
       "order": 8,
       "lastUpdated": "2025-02-01"
+    },
+    {
+      "id": "rhlife",
+      "title": "RHLife",
+      "description": "RH sous pression, décisions froides, conséquences humaines.",
+      "tags": ["narratif", "satire", "choix"],
+      "themeId": "asphalt",
+      "previewEmoji": "🗂️",
+      "order": 9,
+      "lastUpdated": "2025-03-01"
     }
   ]
 }

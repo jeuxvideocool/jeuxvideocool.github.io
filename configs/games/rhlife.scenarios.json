@@ -1,0 +1,518 @@
+{
+  "gauges": [
+    {
+      "id": "satisfaction",
+      "label": "Satisfaction affichee",
+      "visible": true,
+      "initial": 54,
+      "polarity": "positive"
+    },
+    {
+      "id": "performance",
+      "label": "Performance business",
+      "visible": true,
+      "initial": 56,
+      "polarity": "positive"
+    },
+    {
+      "id": "legal",
+      "label": "Conformite legale",
+      "visible": true,
+      "initial": 62,
+      "polarity": "positive"
+    },
+    {
+      "id": "pressure",
+      "label": "Pression hierarchique",
+      "visible": true,
+      "initial": 48,
+      "polarity": "negative"
+    },
+    {
+      "id": "reputation",
+      "label": "Reputation RH",
+      "visible": true,
+      "initial": 50,
+      "polarity": "positive"
+    },
+    {
+      "id": "burnout",
+      "label": "Epuisement reel",
+      "visible": false,
+      "initial": 35,
+      "polarity": "negative"
+    },
+    {
+      "id": "cynicism",
+      "label": "Cynisme collectif",
+      "visible": false,
+      "initial": 38,
+      "polarity": "negative"
+    },
+    {
+      "id": "socialRisk",
+      "label": "Risque social latent",
+      "visible": false,
+      "initial": 30,
+      "polarity": "negative"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "intro-barometre",
+      "title": "Semaine 1 - Barometre qui gratte",
+      "difficulty": 1,
+      "context": {
+        "mail": "Objet: Barometre Q2 - merci d'eviter les verbatims bruts.",
+        "meeting": "Reunion hebdo RH: on communique sur l'energie, pas sur les irritants.",
+        "rumor": "Rumeur: les resultats seront filtres avant diffusion.",
+        "incident": "Incident discret: un tableau d'arrets a tourne sur Teams.",
+        "urgentRequest": "Demande urgente: COMEX veut une note positive avant demain 9h."
+      },
+      "problem": "Le barometre remonte un malaise net. Le terrain veut de la transparence. Le management veut un message propre.",
+      "choices": [
+        {
+          "id": "intro-optimize",
+          "label": "Publier une synthese optimisee avec actions rapides.",
+          "immediateEffects": {
+            "satisfaction": 4,
+            "performance": 2,
+            "legal": -2,
+            "pressure": -3,
+            "reputation": 1,
+            "burnout": 1,
+            "cynicism": 4,
+            "socialRisk": 3
+          },
+          "deferredConsequences": [
+            {
+              "delay": 2,
+              "summary": "Fuite des verbatims bruts. Indignation en interne.",
+              "event": "Un cadre partage le fichier original a un collectif.",
+              "effects": {
+                "satisfaction": -6,
+                "reputation": -4,
+                "socialRisk": 8,
+                "legal": -3
+              }
+            }
+          ],
+          "feedback": "Synthese alignee. Message recu. On respire.",
+          "futureEvent": "Risque de fuite si un verbatim circule.",
+          "endingImpact": "Renforce une trajectoire performante mais impopulaire."
+        },
+        {
+          "id": "intro-listen",
+          "label": "Organiser des ateliers d'ecoute limites et anonymes.",
+          "immediateEffects": {
+            "satisfaction": 6,
+            "performance": -2,
+            "legal": 1,
+            "pressure": 3,
+            "reputation": 3,
+            "burnout": -2,
+            "cynicism": -2,
+            "socialRisk": -1
+          },
+          "deferredConsequences": [
+            {
+              "delay": 2,
+              "summary": "Attentes non financees. La parole tourne court.",
+              "event": "Les groupes disent avoir servi de vitrine.",
+              "effects": {
+                "cynicism": 6,
+                "satisfaction": -3,
+                "pressure": 2
+              }
+            }
+          ],
+          "feedback": "Signal humain envoye. Agenda alourdi.",
+          "futureEvent": "Risque d'effet boomerang si rien ne suit.",
+          "endingImpact": "Favorise une fin humaine mais politisee."
+        },
+        {
+          "id": "intro-legal",
+          "label": "Remonter l'alerte au juridique et geler la comm.",
+          "immediateEffects": {
+            "satisfaction": -3,
+            "performance": -1,
+            "legal": 5,
+            "pressure": 5,
+            "reputation": 1,
+            "burnout": 1,
+            "cynicism": 1,
+            "socialRisk": 2
+          },
+          "deferredConsequences": [
+            {
+              "delay": 1,
+              "summary": "Le juridique demande des traces et des preuves.",
+              "event": "Audit interne surprise.",
+              "effects": {
+                "pressure": 3,
+                "performance": -2,
+                "legal": 2,
+                "burnout": 2
+              }
+            }
+          ],
+          "feedback": "Couverture legale solide. Ambiance raidie.",
+          "futureEvent": "Audit interne si les signaux se confirment.",
+          "endingImpact": "Rend plausible une fin sacrifiee par le systeme."
+        }
+      ]
+    },
+    {
+      "id": "mobilite-agile",
+      "title": "Semaine 3 - Mobilite agile",
+      "difficulty": 2,
+      "context": {
+        "mail": "Objet: Projet Mobilite Agile - rationaliser les effectifs.",
+        "meeting": "Comite managers: on requalifie les postes, pas besoin de filer la parano.",
+        "rumor": "Rumeur: une liste de 40 noms circule.",
+        "incident": "Incident discret: un manager annonce un changement de poste sans RH.",
+        "urgentRequest": "Demande urgente: CFO veut un plan low noise d'ici vendredi."
+      },
+      "problem": "Le plan de mobilite reduit les couts mais fracture les equipes. Tu dois cadrer la methode.",
+      "choices": [
+        {
+          "id": "mobilite-force",
+          "label": "Valider la mobilite forcee avec un discours d'opportunite.",
+          "immediateEffects": {
+            "satisfaction": -5,
+            "performance": 6,
+            "legal": -3,
+            "pressure": -2,
+            "reputation": -3,
+            "burnout": 4,
+            "cynicism": 5,
+            "socialRisk": 5
+          },
+          "deferredConsequences": [
+            {
+              "delay": 1,
+              "summary": "Plainte collective et intervention des representants.",
+              "event": "Saisine de l'inspection du travail.",
+              "effects": {
+                "legal": -6,
+                "socialRisk": 7,
+                "reputation": -2
+              }
+            }
+          ],
+          "feedback": "Plan accelere. Tension assumee.",
+          "futureEvent": "Risque de contentieux si un dossier sort.",
+          "endingImpact": "Renforce la trajectoire DRH performante mais detestee."
+        },
+        {
+          "id": "mobilite-pilote",
+          "label": "Negocier un pilote transparent avec volontariat limite.",
+          "immediateEffects": {
+            "satisfaction": 3,
+            "performance": -2,
+            "legal": 2,
+            "pressure": 2,
+            "reputation": 2,
+            "burnout": 1,
+            "cynicism": -1,
+            "socialRisk": -1
+          },
+          "deferredConsequences": [
+            {
+              "delay": 2,
+              "summary": "Le pilote ralentit les economies mais apaise.",
+              "event": "Le Comex valide une phase 2 plus douce.",
+              "effects": {
+                "performance": 4,
+                "satisfaction": 2,
+                "pressure": -2
+              }
+            }
+          ],
+          "feedback": "Tu gagnes du temps, pas du credit.",
+          "futureEvent": "Phase 2 conditionnee aux resultats.",
+          "endingImpact": "Favorise une fin humaine mais marginalisee."
+        },
+        {
+          "id": "mobilite-stop",
+          "label": "Bloquer le projet et demander un arbitrage officiel.",
+          "immediateEffects": {
+            "satisfaction": 1,
+            "performance": -4,
+            "legal": 3,
+            "pressure": 5,
+            "reputation": 2,
+            "burnout": -2,
+            "cynicism": -1,
+            "socialRisk": -2
+          },
+          "deferredConsequences": [
+            {
+              "delay": 1,
+              "summary": "Le sponsor cherche un contournement.",
+              "event": "Un cabinet externe arrive avec un plan sec.",
+              "effects": {
+                "pressure": 4,
+                "performance": -2,
+                "cynicism": 2
+              }
+            }
+          ],
+          "feedback": "Position principielle. Alliances fragiles.",
+          "futureEvent": "Cabinet externe si l'arbitrage patine.",
+          "endingImpact": "Rend plausible une fin sacrifiee ou isolee."
+        }
+      ]
+    },
+    {
+      "id": "calibration",
+      "title": "Semaine 6 - Calibration des performances",
+      "difficulty": 3,
+      "context": {
+        "mail": "Objet: Ajustement bonus - marge Q3.",
+        "meeting": "Reunion managers: on doit sortir 10% en plan de perf.",
+        "rumor": "Rumeur: une liste des trop chers circule.",
+        "incident": "Incident discret: un employe craque en open space.",
+        "urgentRequest": "Demande urgente: liste PIP pour demain 18h."
+      },
+      "problem": "Le tri demande du management parait 'inevitable'. Chaque scenario casse quelque chose.",
+      "choices": [
+        {
+          "id": "calibration-forced",
+          "label": "Appliquer le forced ranking et livrer la liste.",
+          "immediateEffects": {
+            "satisfaction": -6,
+            "performance": 5,
+            "legal": -2,
+            "pressure": -3,
+            "reputation": -4,
+            "burnout": 4,
+            "cynicism": 6,
+            "socialRisk": 6
+          },
+          "deferredConsequences": [
+            {
+              "delay": 1,
+              "summary": "Depart massif et murmures de greve.",
+              "event": "Des leaders informels parlent d'arret.",
+              "effects": {
+                "socialRisk": 7,
+                "reputation": -5,
+                "satisfaction": -3
+              }
+            }
+          ],
+          "feedback": "Liste livree. Silence dans les couloirs.",
+          "futureEvent": "Risque d'arret collectif si la liste fuit.",
+          "endingImpact": "Pousse vers DRH performant mais deteste."
+        },
+        {
+          "id": "calibration-support",
+          "label": "Proposer un plan d'accompagnement avec objectifs realistes.",
+          "immediateEffects": {
+            "satisfaction": -2,
+            "performance": 2,
+            "legal": 1,
+            "pressure": 2,
+            "reputation": 2,
+            "burnout": 1,
+            "cynicism": -1,
+            "socialRisk": -1
+          },
+          "deferredConsequences": [
+            {
+              "delay": 2,
+              "summary": "Les equipes remercient mais demandent des moyens.",
+              "event": "La charge de travail devient le sujet #1.",
+              "effects": {
+                "burnout": 4,
+                "satisfaction": 3,
+                "pressure": 1
+              }
+            }
+          ],
+          "feedback": "Tu gagnes du lien, pas des lignes de budget.",
+          "futureEvent": "La charge revient en boomerang.",
+          "endingImpact": "Renforce une fin humaine mais marginalisee."
+        },
+        {
+          "id": "calibration-refuse",
+          "label": "Refuser la liste, demander mediation collective.",
+          "immediateEffects": {
+            "satisfaction": 3,
+            "performance": -3,
+            "legal": 3,
+            "pressure": 5,
+            "reputation": 3,
+            "burnout": -1,
+            "cynicism": -2,
+            "socialRisk": -2
+          },
+          "deferredConsequences": [
+            {
+              "delay": 1,
+              "summary": "Le Comex te passe en risque politique.",
+              "event": "On te retire un dossier strategique.",
+              "effects": {
+                "pressure": 4,
+                "reputation": -2,
+                "performance": -1
+              }
+            }
+          ],
+          "feedback": "Posture claire. Couloir politique ferme.",
+          "futureEvent": "Retrait de dossier si la tension monte.",
+          "endingImpact": "Rend plausible une fin sacrifiee."
+        }
+      ]
+    },
+    {
+      "id": "crise-publique",
+      "title": "Semaine 9 - Exposition publique",
+      "difficulty": 4,
+      "context": {
+        "mail": "Objet: Article presse en preparation.",
+        "meeting": "Comite de crise: on aligne la narration, pas les details.",
+        "rumor": "Rumeur: les syndicats preparent un appel public.",
+        "incident": "Incident discret: un post LinkedIn anonyme cite la boite.",
+        "urgentRequest": "Demande urgente: preparer un memo et un nom de porte-parole."
+      },
+      "problem": "L'exterieur regarde enfin. La RH devient visible. Le systeme veut un fusible.",
+      "choices": [
+        {
+          "id": "crise-fusible",
+          "label": "Cadrer la com' et designer un manager fusible.",
+          "immediateEffects": {
+            "satisfaction": -4,
+            "performance": 2,
+            "legal": -3,
+            "pressure": -2,
+            "reputation": 4,
+            "burnout": 3,
+            "cynicism": 5,
+            "socialRisk": 6
+          },
+          "deferredConsequences": [
+            {
+              "delay": 1,
+              "summary": "Le fusible parle. La version se fissure.",
+              "event": "Un avocat publie des mails internes.",
+              "effects": {
+                "legal": -5,
+                "reputation": -4,
+                "socialRisk": 4
+              }
+            }
+          ],
+          "feedback": "Sortie de crise rapide. Detonateur en reserve.",
+          "futureEvent": "Risque de contre-recits publics.",
+          "endingImpact": "Pousse vers une fin sacrifiee ou cynique."
+        },
+        {
+          "id": "crise-cooperate",
+          "label": "Cooperer avec l'inspection et partager les donnees brutes.",
+          "immediateEffects": {
+            "satisfaction": 1,
+            "performance": -2,
+            "legal": 5,
+            "pressure": 4,
+            "reputation": 1,
+            "burnout": 2,
+            "cynicism": -1,
+            "socialRisk": -2
+          },
+          "deferredConsequences": [
+            {
+              "delay": 1,
+              "summary": "Le rapport officialise les tensions mais ouvre un plan.",
+              "event": "Le Comex impose une tutelle RH.",
+              "effects": {
+                "pressure": -3,
+                "socialRisk": -3,
+                "reputation": 2
+              }
+            }
+          ],
+          "feedback": "Conformite sauvee. Autorite entamee.",
+          "futureEvent": "Tutelle si l'inspection conclut a un risque.",
+          "endingImpact": "Peut mener a une fin humaine mais marginalisee."
+        },
+        {
+          "id": "crise-wellbeing",
+          "label": "Lancer un plan bien-etre express et storytelling interne.",
+          "immediateEffects": {
+            "satisfaction": 3,
+            "performance": -1,
+            "legal": -1,
+            "pressure": 1,
+            "reputation": 2,
+            "burnout": 1,
+            "cynicism": 2,
+            "socialRisk": 2
+          },
+          "deferredConsequences": [
+            {
+              "delay": 1,
+              "summary": "Le decalage entre discours et realite explose.",
+              "event": "Un hashtag moqueur devient viral.",
+              "effects": {
+                "cynicism": 8,
+                "satisfaction": -4,
+                "socialRisk": 5,
+                "reputation": -3
+              }
+            }
+          ],
+          "feedback": "Surface propre. Fond inquiet.",
+          "futureEvent": "Risque de backlash public si la campagne tourne mal.",
+          "endingImpact": "Renforce une fin cynique ou broyee."
+        }
+      ]
+    }
+  ],
+  "endings": [
+    {
+      "id": "burnout",
+      "title": "RH broyee",
+      "description": "Tu tiens la barque a mains nues. Le systeme te remplace sans bruit.",
+      "min": { "burnout": 80, "pressure": 70 }
+    },
+    {
+      "id": "scapegoat",
+      "title": "RH sacrifiee",
+      "description": "Le dossier devait tomber. Tu etais la variable d'ajustement.",
+      "min": { "pressure": 75, "socialRisk": 60 }
+    },
+    {
+      "id": "cynic",
+      "title": "RH devenu cynique",
+      "description": "Tu parles Excel. Tu penses Excel. Tu ne ressens plus grand-chose.",
+      "min": { "cynicism": 70, "reputation": 40 }
+    },
+    {
+      "id": "drh-hated",
+      "title": "DRH performant mais deteste",
+      "description": "Objectifs atteints. Regards froids. Dossiers propres. Couloirs vides.",
+      "min": { "performance": 70 },
+      "max": { "satisfaction": 40, "reputation": 45 }
+    },
+    {
+      "id": "human-marginalized",
+      "title": "RH humaine mais marginalisee",
+      "description": "Tu as protege des gens. Le pouvoir t'a contourne.",
+      "min": { "satisfaction": 65 },
+      "max": { "performance": 55 }
+    },
+    {
+      "id": "exit-system",
+      "title": "RH qui quitte le systeme",
+      "description": "Tu pars avant de devenir un rouage. Le systeme continue sans toi.",
+      "min": { "burnout": 70, "reputation": 45 }
+    },
+    {
+      "id": "limbo",
+      "title": "RH en sursis",
+      "description": "Tu restes. Rien n'est resolu. La prochaine crise est deja planifiee."
+    }
+  ]
+}

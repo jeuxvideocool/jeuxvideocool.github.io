@@ -1,0 +1,34 @@
+{
+  "id": "rhlife",
+  "saveSchemaVersion": 1,
+  "themeId": "asphalt",
+  "xpRules": {
+    "SESSION_START": 10,
+    "CHOICE_MADE": 18,
+    "SCENARIO_COMPLETE": 25,
+    "ENDING_REACHED": 120,
+    "SESSION_WIN": 40
+  },
+  "uiText": {
+    "title": "RHLife",
+    "shortDescription": "Choix RH, couts humains, decisions a froid.",
+    "help": "Tu incarnes une RH intermediaire coincee entre objectifs, conformite et terrain. Chaque decision modifie des jauges visibles et internes. Rien n'est gratuit.",
+    "controls": ["Clique sur un choix", "1-4 pour selectionner"]
+  },
+  "difficultyParams": {
+    "startingGauge": 50,
+    "minGauge": 0,
+    "maxGauge": 100,
+    "scenarioCount": 4,
+    "deferredRevealDelay": 1
+  },
+  "input": {
+    "keys": {
+      "choice1": "Digit1",
+      "choice2": "Digit2",
+      "choice3": "Digit3",
+      "choice4": "Digit4",
+      "next": "Enter"
+    }
+  }
+}
