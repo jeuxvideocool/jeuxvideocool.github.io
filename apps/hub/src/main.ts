@@ -6,6 +6,7 @@ import {
   getGameConfigs,
   getRegistry,
   getThemes,
+  getXPConfig,
   ThemeConfig,
 } from "@config";
 import { ALEX_SECRET, attachProgressionListener, canAccessAlexPage, getProgressionSnapshot } from "@progression";
@@ -125,6 +126,88 @@ function formatDuration(ms?: number) {
   if (hours) return `${hours}h ${minutes}m`;
   if (minutes) return `${minutes}m ${seconds}s`;
   return `${seconds}s`;
+}
+
+function formatNumber(value: number) {
+  return new Intl.NumberFormat("fr-FR").format(value);
+}
+
+function shortLabel(value: string) {
+  return value.trim().slice(0, 3).toUpperCase();
+}
+
+type ChartPoint = { x: number; y: number };
+
+function buildLineChart(values: number[], progressIndex?: number) {
+  if (values.length < 2) return null;
+  const safeValues = values.map((value) => (Number.isFinite(value) ? value : 0));
+  const width = 100;
+  const height = 42;
+  const padding = 4;
+  const max = Math.max(...safeValues, 1);
+  const min = Math.min(...safeValues, 0);
+  const range = max - min || 1;
+  const step = (width - padding * 2) / Math.max(1, safeValues.length - 1);
+
+  const points: ChartPoint[] = safeValues.map((value, index) => {
+    const x = padding + step * index;
+    const ratio = (value - min) / range;
+    const y = padding + (height - padding * 2) * (1 - ratio);
+    return { x, y };
+  });
+
+  const pointString = points.map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`).join(" ");
+  const area = `${padding},${height - padding} ${pointString} ${width - padding},${height - padding}`;
+
+  const targetIndex = progressIndex === undefined ? points.length - 1 : progressIndex;
+  const clampedIndex = Math.max(0, Math.min(targetIndex, points.length - 1));
+  const baseIndex = Math.floor(clampedIndex);
+  const fraction = clampedIndex - baseIndex;
+  const progressPoints = points.slice(0, baseIndex + 1);
+  if (fraction > 0 && baseIndex < points.length - 1) {
+    const start = points[baseIndex];
+    const end = points[baseIndex + 1];
+    progressPoints.push({
+      x: start.x + (end.x - start.x) * fraction,
+      y: start.y + (end.y - start.y) * fraction,
+    });
+  }
+  const progress = progressPoints
+    .map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`)
+    .join(" ");
+  const marker = progressPoints[progressPoints.length - 1];
+
+  return { points: pointString, area, progress, marker };
+}
+
+function renderCurveChart(
+  chart: ReturnType<typeof buildLineChart>,
+  idPrefix: string,
+) {
+  if (!chart) {
+    return `<div class="chart-empty">Pas encore assez de données.</div>`;
+  }
+
+  return `
+    <div class="curve-chart">
+      <svg viewBox="0 0 100 42" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="${idPrefix}-line" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="var(--chart-primary)" />
+            <stop offset="100%" stop-color="var(--chart-secondary)" />
+          </linearGradient>
+          <linearGradient id="${idPrefix}-fill" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="var(--chart-primary)" stop-opacity="0.35" />
+            <stop offset="100%" stop-color="var(--chart-primary)" stop-opacity="0" />
+          </linearGradient>
+        </defs>
+        <polyline class="chart-line base" points="${chart.points}" />
+        <polygon class="chart-area" points="${chart.area}" fill="url(#${idPrefix}-fill)" />
+        <polyline class="chart-line progress" points="${chart.progress}" stroke="url(#${idPrefix}-line)" />
+        <circle class="chart-marker" cx="${chart.marker.x}" cy="${chart.marker.y}" r="2.6" />
+      </svg>
+    </div>
+  `;
 }
 
 function mostPlayedGameTitle(save: SaveState): { title: string; duration: string } {
@@ -674,87 +757,315 @@ function renderCloudPanel() {
 function renderStats() {
   const save = snapshot.save;
   const gamesEntries = Object.entries(save.games || {});
-  const maxTime = Math.max(
-    1,
-    ...gamesEntries.map(([, game]) => Math.max(game.timePlayedMs ?? 0, 1)),
-  );
+  const games = gamesEntries.map(([id, game]) => {
+    const title = registry.games.find((g) => g.id === id)?.title || id;
+    return {
+      id,
+      title,
+      timePlayedMs: game.timePlayedMs ?? 0,
+      bestScore: game.bestScore,
+      lastPlayedAt: game.lastPlayedAt ?? 0,
+    };
+  });
+  const gamesPlayed = games.length;
+  const totalTimeMs = save.globalStats.timePlayedMs ?? 0;
+  const totalSessions = save.globalStats.totalSessions ?? 0;
+  const avgSessionMs = totalSessions ? totalTimeMs / totalSessions : 0;
+  const wins = save.globalStats.events["SESSION_WIN"] ?? 0;
+  const fails = save.globalStats.events["SESSION_FAIL"] ?? 0;
+  const winRate = wins + fails > 0 ? Math.round((wins / (wins + fails)) * 100) : 0;
   const achievementsUnlocked = save.achievementsUnlocked.length;
   const totalAchievements = achievementsConfig.achievements.length;
-  const lastPlayed = gamesEntries
-    .map(([id, game]) => ({ id, last: game.lastPlayedAt || 0 }))
-    .sort((a, b) => b.last - a.last)[0];
-  const lastPlayedTitle =
-    lastPlayed && lastPlayed.last
-      ? registry.games.find((g) => g.id === lastPlayed.id)?.title || lastPlayed.id
-      : "Aucun jeu";
-  const gameBars =
-    gamesEntries.length === 0
-      ? "<p class='muted'>Pas encore de données de jeu.</p>"
-      : gamesEntries
-          .map(([id, game]) => {
-            const title = registry.games.find((g) => g.id === id)?.title || id;
-            const percent = Math.max(
-              5,
-              Math.round(((game.timePlayedMs || 0) / maxTime) * 100),
-            );
-            return `
-            <div class="chart-row">
-              <div>
-                <strong>${title}</strong>
-                <p class="muted small">${formatDuration(game.timePlayedMs)} · ${
-                  game.bestScore ? `Best ${game.bestScore}` : "Aucun score"
-                } · ${game.lastPlayedAt ? formatDate(game.lastPlayedAt) : "Jamais"}</p>
+  const achievementRate = totalAchievements
+    ? Math.round((achievementsUnlocked / totalAchievements) * 100)
+    : 0;
+  const bestStreak = Math.max(0, ...Object.values(save.globalStats.streaks || {}));
+  const gamesByTime = [...games].sort((a, b) => b.timePlayedMs - a.timePlayedMs);
+  const lastPlayed = [...games]
+    .filter((game) => game.lastPlayedAt)
+    .sort((a, b) => b.lastPlayedAt - a.lastPlayedAt)[0];
+  const lastPlayedTitle = lastPlayed?.title || "Aucun jeu";
+  const lastPlayedDate = lastPlayed?.lastPlayedAt ? formatDate(lastPlayed.lastPlayedAt) : "Jamais";
+  const mostPlayed = mostPlayedGameTitle(save);
+
+  const xpConfig = getXPConfig();
+  const levels = [...xpConfig.levels].sort((a, b) => a.level - b.level);
+  const levelValues = levels.map((level) => level.requiredXP);
+  const currentLevelIndex = Math.max(
+    0,
+    levels.findIndex((level) => level.level === save.globalLevel),
+  );
+  const xpProgressIndex = currentLevelIndex + snapshot.levelProgress;
+  const xpChart = buildLineChart(levelValues, xpProgressIndex);
+  const xpProgressPercent = Math.round(snapshot.levelProgress * 100);
+  const xpToNext = Math.max(0, snapshot.nextLevelXP - save.globalXP);
+
+  const recentGames = [...games]
+    .filter((game) => game.lastPlayedAt)
+    .sort((a, b) => a.lastPlayedAt - b.lastPlayedAt)
+    .slice(-8);
+  const activityGames =
+    recentGames.length >= 2
+      ? recentGames
+      : gamesByTime.filter((game) => game.timePlayedMs > 0).slice(0, 8);
+  const activityValues = activityGames.map((game) => game.timePlayedMs);
+  const activityChart = buildLineChart(activityValues);
+  const activityHint = recentGames.length >= 2 ? "Derniers jeux lancés" : "Top temps de jeu";
+  const activityLabels = activityGames.length
+    ? `<div class="curve-labels">
+        ${activityGames
+          .map((game) => `<span title="${game.title}">${shortLabel(game.title)}</span>`)
+          .join("")}
+      </div>`
+    : "";
+
+  const gameTimeTotal = games.reduce((sum, game) => sum + game.timePlayedMs, 0);
+  const topGames = gamesByTime.filter((game) => game.timePlayedMs > 0).slice(0, 5);
+  const topTime = topGames.reduce((sum, game) => sum + game.timePlayedMs, 0);
+  const otherTime = Math.max(0, gameTimeTotal - topTime);
+  const palette = [
+    "var(--chart-1)",
+    "var(--chart-2)",
+    "var(--chart-3)",
+    "var(--chart-4)",
+    "var(--chart-5)",
+    "var(--chart-6)",
+  ];
+
+  let donutStyle = "";
+  let donutLegend = "";
+  if (gameTimeTotal > 0 && topGames.length) {
+    let cursor = 0;
+    const segments = topGames.map((game, index) => {
+      const pct = (game.timePlayedMs / gameTimeTotal) * 100;
+      const start = cursor;
+      cursor += pct;
+      return `${palette[index % palette.length]} ${start.toFixed(2)}% ${cursor.toFixed(2)}%`;
+    });
+    if (otherTime > 0) {
+      segments.push(`var(--chart-6) ${cursor.toFixed(2)}% 100%`);
+    }
+    donutStyle = `style="--donut: conic-gradient(${segments.join(", ")})"`;
+    donutLegend = topGames
+      .map((game, index) => {
+        const pct = Math.round((game.timePlayedMs / gameTimeTotal) * 100);
+        return `
+          <div class="legend-item">
+            <span class="legend-dot" style="--dot:${palette[index % palette.length]}"></span>
+            <div>
+              <strong>${game.title}</strong>
+              <p class="muted small">${formatDuration(game.timePlayedMs)} · ${pct}%</p>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+    if (otherTime > 0) {
+      const pct = Math.round((otherTime / gameTimeTotal) * 100);
+      donutLegend += `
+        <div class="legend-item">
+          <span class="legend-dot" style="--dot:var(--chart-6)"></span>
+          <div>
+            <strong>Autres</strong>
+            <p class="muted small">${formatDuration(otherTime)} · ${pct}%</p>
+          </div>
+        </div>
+      `;
+    }
+  } else {
+    donutLegend = `<p class="muted">Pas encore de temps de jeu enregistré.</p>`;
+    donutStyle = `style="--donut: conic-gradient(rgba(255, 255, 255, 0.08) 0 100%)"`;
+  }
+
+  const scoreEntries = [...games]
+    .filter((game) => game.bestScore !== undefined)
+    .sort((a, b) => (b.bestScore ?? 0) - (a.bestScore ?? 0))
+    .slice(0, 6);
+  const maxScore = Math.max(1, ...scoreEntries.map((game) => game.bestScore ?? 0));
+  const scoreRows = scoreEntries.length
+    ? scoreEntries
+        .map((game) => {
+          const score = game.bestScore ?? 0;
+          const percent = Math.max(6, Math.round((score / maxScore) * 100));
+          return `
+            <div class="score-row">
+              <div class="score-info">
+                <strong>${game.title}</strong>
+                <span class="muted small">${formatDuration(game.timePlayedMs)} joués</span>
               </div>
-              <div class="chart-bar">
-                <span style="width:${percent}%"></span>
-              </div>
+              <div class="score-bar"><span style="width:${percent}%"></span></div>
+              <div class="score-value">${formatNumber(score)}</div>
             </div>
           `;
-          })
-          .join("");
+        })
+        .join("")
+    : `<p class="muted">Aucun score enregistré pour le moment.</p>`;
 
   return `
-    <section class="card">
+    <section class="card stats-kpi">
       <div class="section-head">
         <div>
           <p class="eyebrow">Stats</p>
-          <h2>Vue d'ensemble</h2>
-          <p class="muted">Activité, temps de jeu et progression globale.</p>
+          <h2>Dashboard KPI</h2>
+          <p class="muted">Vue globale, progression et performance par jeu.</p>
+        </div>
+        <div class="kpi-badges">
+          <span class="chip ghost">Dernier : ${lastPlayedTitle}</span>
+          <span class="chip ghost">Dernière activité : ${lastPlayedDate}</span>
         </div>
       </div>
-      <div class="stat-grid">
-        <div class="stat-card">
-          <p class="label">Temps total</p>
-          <strong>${formatDuration(save.globalStats.timePlayedMs)}</strong>
-          <p class="muted small">${save.globalStats.totalSessions} sessions</p>
+      <div class="kpi-grid">
+        <div class="kpi-card" style="--kpi-accent: var(--chart-1)">
+          <div class="kpi-top">
+            <span class="kpi-icon">⏱</span>
+            <span class="kpi-label">Temps total</span>
+          </div>
+          <strong>${formatDuration(totalTimeMs)}</strong>
+          <p class="muted small">Session moyenne ${formatDuration(avgSessionMs)}</p>
         </div>
-        <div class="stat-card">
-          <p class="label">Jeux joués</p>
-          <strong>${Object.keys(save.games).length}/${registry.games.length}</strong>
-          <p class="muted small">Dernier : ${lastPlayedTitle}</p>
+        <div class="kpi-card" style="--kpi-accent: var(--chart-2)">
+          <div class="kpi-top">
+            <span class="kpi-icon">🎮</span>
+            <span class="kpi-label">Sessions</span>
+          </div>
+          <strong>${formatNumber(totalSessions)}</strong>
+          <p class="muted small">${wins} victoires · ${fails} défaites</p>
         </div>
-        <div class="stat-card">
-          <p class="label">Succès</p>
+        <div class="kpi-card" style="--kpi-accent: var(--chart-3)">
+          <div class="kpi-top">
+            <span class="kpi-icon">⚡</span>
+            <span class="kpi-label">XP globale</span>
+          </div>
+          <strong>${formatNumber(save.globalXP)} XP</strong>
+          <p class="muted small">Niveau ${save.globalLevel} · ${xpProgressPercent}%</p>
+        </div>
+        <div class="kpi-card" style="--kpi-accent: var(--chart-4)">
+          <div class="kpi-top">
+            <span class="kpi-icon">🧩</span>
+            <span class="kpi-label">Jeux joués</span>
+          </div>
+          <strong>${gamesPlayed}/${registry.games.length}</strong>
+          <p class="muted small">Top : ${mostPlayed.title}</p>
+        </div>
+        <div class="kpi-card" style="--kpi-accent: var(--chart-5)">
+          <div class="kpi-top">
+            <span class="kpi-icon">🏆</span>
+            <span class="kpi-label">Succès</span>
+          </div>
           <strong>${achievementsUnlocked}/${totalAchievements}</strong>
-          <p class="muted small">Schema v${save.schemaVersion}</p>
+          <p class="muted small">${achievementRate}% complétés</p>
         </div>
-        <div class="stat-card">
-          <p class="label">Jeu le plus joué</p>
-          <strong>${mostPlayedGameTitle(save).title}</strong>
-          <p class="muted small">${mostPlayedGameTitle(save).duration}</p>
+        <div class="kpi-card" style="--kpi-accent: var(--chart-6)">
+          <div class="kpi-top">
+            <span class="kpi-icon">📈</span>
+            <span class="kpi-label">Performance</span>
+          </div>
+          <strong>${winRate}%</strong>
+          <p class="muted small">Streak max ${bestStreak}</p>
         </div>
       </div>
     </section>
-    <section class="card">
+
+    <section class="card stats-curves">
       <div class="section-head">
         <div>
-          <p class="eyebrow">Temps par jeu</p>
-          <h2>Répartition</h2>
-          <p class="muted">Temps passé, scores et derniers lancements.</p>
+          <p class="eyebrow">Progression</p>
+          <h2>Courbes de progression</h2>
+          <p class="muted">XP, niveaux et rythme d'activité.</p>
         </div>
       </div>
-      <div class="chart-list">
-        ${gameBars}
+      <div class="curve-grid">
+        <article class="curve-card" style="--chart-primary: var(--color-primary); --chart-secondary: var(--color-secondary)">
+          <div class="curve-head">
+            <div>
+              <h3>Niveaux & XP</h3>
+              <p class="muted small">Prochain niveau : ${formatNumber(snapshot.nextLevelXP)} XP</p>
+            </div>
+            <span class="chip ghost">+${formatNumber(xpToNext)} XP</span>
+          </div>
+          ${renderCurveChart(xpChart, "xp-curve")}
+          <div class="curve-metrics">
+            <div>
+              <span class="label">XP globale</span>
+              <strong>${formatNumber(save.globalXP)}</strong>
+            </div>
+            <div>
+              <span class="label">Progression</span>
+              <strong>${xpProgressPercent}%</strong>
+            </div>
+            <div>
+              <span class="label">Niveau</span>
+              <strong>${save.globalLevel}</strong>
+            </div>
+          </div>
+        </article>
+        <article class="curve-card" style="--chart-primary: var(--color-accent); --chart-secondary: var(--color-primary)">
+          <div class="curve-head">
+            <div>
+              <h3>Rythme d'activité</h3>
+              <p class="muted small">${activityHint}</p>
+            </div>
+            <span class="chip ghost">${winRate}% win</span>
+          </div>
+          ${renderCurveChart(activityChart, "activity-curve")}
+          ${activityLabels}
+          <div class="curve-metrics">
+            <div>
+              <span class="label">Sessions</span>
+              <strong>${formatNumber(totalSessions)}</strong>
+            </div>
+            <div>
+              <span class="label">Temps total</span>
+              <strong>${formatDuration(totalTimeMs)}</strong>
+            </div>
+            <div>
+              <span class="label">Jeu top</span>
+              <strong>${mostPlayed.title}</strong>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="card stats-diagrams">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Jeux</p>
+          <h2>Diagrammes & scores</h2>
+          <p class="muted">Répartition des jeux les plus joués et meilleurs scores.</p>
+        </div>
+      </div>
+      <div class="diagram-grid">
+        <article class="diagram-card">
+          <div class="diagram-head">
+            <div>
+              <h3>Jeux les plus joués</h3>
+              <p class="muted small">${gamesPlayed} jeux actifs</p>
+            </div>
+          </div>
+          <div class="donut-wrap">
+            <div class="donut" ${donutStyle}></div>
+            <div class="donut-center">
+              <span class="label">Temps total</span>
+              <strong>${formatDuration(totalTimeMs)}</strong>
+              <p class="muted small">${gamesPlayed} jeux</p>
+            </div>
+          </div>
+          <div class="donut-legend">
+            ${donutLegend}
+          </div>
+        </article>
+        <article class="diagram-card">
+          <div class="diagram-head">
+            <div>
+              <h3>Meilleurs scores</h3>
+              <p class="muted small">Top jeux par score enregistré.</p>
+            </div>
+          </div>
+          <div class="score-list">
+            ${scoreRows}
+          </div>
+        </article>
       </div>
     </section>
   `;
