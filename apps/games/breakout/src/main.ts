@@ -1,4 +1,5 @@
 import "./style.css";
+import "@core/launch-menu.css";
 import { createHybridInput, createMobileControls } from "@core/input";
 import { createGameLoop } from "@core/loop";
 import { chance, clamp, rand, withBasePath } from "@core/utils";
@@ -91,7 +92,7 @@ const ui = document.getElementById("ui") as HTMLDivElement;
 const ctx = canvas.getContext("2d")!;
 const input = createHybridInput();
 const overlay = document.createElement("div");
-overlay.className = "overlay";
+overlay.className = "launch-overlay";
 overlay.style.display = "none";
 ui.appendChild(overlay);
 
@@ -1093,45 +1094,88 @@ function showOverlay(title: string, body: string, showStart = true, lastScore?: 
   overlay.style.display = "grid";
   ui.style.pointerEvents = "auto";
   canvas.style.pointerEvents = "none";
+  const shortDescription = config?.uiText.shortDescription || "";
+  const description = body || config?.uiText.help || "";
   const controlsList = (config?.uiText.controls || [])
-    .map((item) => `<span class="chip ghost">${item}</span>`)
+    .map((item) => `<span class="launch-chip">${item}</span>`)
     .join("");
   const bricksEstimate = Math.round(preset.rows * preset.cols * preset.brickDensity);
   const extraHelp =
-    "Bonus/Malus tombent : balles +, vitesse acceleree, touches inversees, ecran qui tremble, raquette reduite, raquette lente, balle minuscule.";
-  overlay.innerHTML = `
-    <div class="panel">
-      <p class="pill">${config?.uiText.title || "Casse-briques"} · ${preset.label}</p>
-      <h2>${title}</h2>
-      ${lastScore !== undefined ? `<p class="muted">Score ${lastScore}</p>` : ""}
-      <p class="muted">${body}</p>
-      <p class="muted">${extraHelp}</p>
-      <div class="panel-actions" style="justify-content:flex-start;">
-        ${Object.entries(difficultyPresets)
-          .map(
-            ([key, preset]) => `
-              <button class="btn ghost diff-btn ${key === selectedDifficulty ? "active" : ""}" data-diff="${key}">
-                ${preset.label} · ${preset.rows}x${preset.cols} · ${preset.lives} vie${
-                  preset.lives > 1 ? "s" : ""
-                }
-              </button>
-            `,
-          )
-          .join("")}
+    "Bonus/Malus tombent : balles +, vitesse accélérée, touches inversées, écran qui tremble, raquette réduite, raquette lente, balle minuscule.";
+  const difficultyOptions = Object.entries(difficultyPresets)
+    .map(
+      ([key, option]) => `
+        <button class="launch-option diff-btn ${key === selectedDifficulty ? "is-active" : ""}" data-diff="${key}">
+          <span class="launch-option-title">${option.label}</span>
+          <span class="launch-option-meta">${option.rows}x${option.cols} · ${option.lives} vie${
+            option.lives > 1 ? "s" : ""
+          }</span>
+        </button>
+      `,
+    )
+    .join("");
+  const settingsMarkup = `
+    <div class="launch-rows">
+      <div class="launch-row">
+        <span class="launch-row-label">Difficulté</span>
+        <div class="launch-row-value launch-options">
+          ${difficultyOptions}
+        </div>
       </div>
-      <div class="panel-actions">
-        ${showStart ? `<button class="btn" id="start-btn">Lancer</button>` : ""}
-        <a class="btn ghost" href="${withBasePath("/", import.meta.env.BASE_URL)}">Hub</a>
+      <div class="launch-row">
+        <span class="launch-row-label">Mode</span>
+        <div class="launch-row-value">
+          <span class="launch-chip">Standard</span>
+        </div>
       </div>
-      <div class="inline-metrics">
-        <div><span>Record</span><strong>${state.best}</strong></div>
-        <div><span>Briques</span><strong>~${bricksEstimate}</strong></div>
-        <div><span>Vies</span><strong>${preset.lives}</strong></div>
-      </div>
-      <div class="controls">${controlsList}</div>
     </div>
   `;
-  document.getElementById("start-btn")?.addEventListener("click", startGame);
+  const metricsMarkup = `
+    <div class="launch-metrics">
+      <div class="launch-metric"><span>Record</span><strong>${state.best}</strong></div>
+      <div class="launch-metric"><span>Briques</span><strong>~${bricksEstimate}</strong></div>
+      <div class="launch-metric"><span>Vies</span><strong>${preset.lives}</strong></div>
+    </div>
+  `;
+  overlay.innerHTML = `
+    <div class="launch-card">
+      <div class="launch-head">
+        <div class="launch-brand">
+          <span class="launch-badge">Arcade Galaxy</span>
+          <span class="launch-badge ghost">${config?.uiText.title || "Casse-briques"}</span>
+        </div>
+        <h2 class="launch-title">${title}</h2>
+        ${shortDescription ? `<p class="launch-subtitle">${shortDescription}</p>` : ""}
+      </div>
+      <div class="launch-grid">
+        <section class="launch-section">
+          <h3 class="launch-section-title">Briefing</h3>
+          <p class="launch-text">${description}</p>
+          ${lastScore !== undefined ? `<p class="launch-note">Dernier score : ${lastScore}</p>` : ""}
+          <p class="launch-note">${extraHelp}</p>
+        </section>
+        <section class="launch-section">
+          <h3 class="launch-section-title">Paramètres</h3>
+          ${settingsMarkup}
+        </section>
+        <section class="launch-section">
+          <h3 class="launch-section-title">Contrôles</h3>
+          <div class="launch-chips">
+            ${controlsList || `<span class="launch-chip muted">Contrôles à définir</span>`}
+          </div>
+        </section>
+        <section class="launch-section">
+          <h3 class="launch-section-title">Repères</h3>
+          ${metricsMarkup}
+        </section>
+      </div>
+      <div class="launch-actions">
+        ${showStart ? `<button class="launch-btn primary" id="launch-start">Lancer</button>` : ""}
+        <a class="launch-btn ghost" href="${withBasePath("/", import.meta.env.BASE_URL)}">Hub</a>
+      </div>
+    </div>
+  `;
+  document.getElementById("launch-start")?.addEventListener("click", startGame);
   document.querySelectorAll<HTMLButtonElement>(".diff-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const diff = btn.dataset.diff as DifficultyKey | undefined;

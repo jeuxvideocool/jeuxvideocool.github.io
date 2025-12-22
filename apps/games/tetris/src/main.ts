@@ -1,4 +1,5 @@
 import "./style.css";
+import "@core/launch-menu.css";
 import { createHybridInput, createMobileControls } from "@core/input";
 import { createGameLoop } from "@core/loop";
 import { clamp, withBasePath } from "@core/utils";
@@ -35,7 +36,7 @@ const ui = document.getElementById("ui") as HTMLDivElement;
 const ctx = canvas.getContext("2d")!;
 const input = createHybridInput();
 const overlay = document.createElement("div");
-overlay.className = "overlay";
+overlay.className = "launch-overlay";
 overlay.style.display = "none";
 ui.appendChild(overlay);
 
@@ -443,19 +444,69 @@ function renderHUD() {
 function showOverlay(title: string, body: string, showStart = true) {
   mobileControls.hide();
   overlay.style.display = "grid";
-  overlay.innerHTML = `
-    <div class="panel">
-      <p class="pill">Tetris Mini</p>
-      <h2>${title}</h2>
-      <p>${body}</p>
-      <div style="display:flex; gap:10px; justify-content:center; margin-top:12px;">
-        ${showStart ? `<button class="btn" id="play-btn">Lancer</button>` : ""}
-        <a class="btn secondary" href="${withBasePath("/apps/hub/", import.meta.env.BASE_URL)}">Hub</a>
+  const shortDescription = config?.uiText.shortDescription || "";
+  const description = body || config?.uiText.help || "";
+  const controlsList = (config?.uiText.controls || [])
+    .map((item) => `<span class="launch-chip">${item}</span>`)
+    .join("");
+  const linesToWin = config?.difficultyParams.linesToWin ?? 24;
+  const boardW = config?.difficultyParams.boardWidth ?? 10;
+  const boardH = config?.difficultyParams.boardHeight ?? 20;
+  const settingsMarkup = `
+    <div class="launch-rows">
+      <div class="launch-row">
+        <span class="launch-row-label">Mode</span>
+        <div class="launch-row-value">
+          <span class="launch-chip">Standard</span>
+        </div>
       </div>
-      <p class="legend">Contrôles : Gauche/Droite pour bouger · Haut pour rotate · Bas pour descendre · Espace pour drop instantané.</p>
+      <div class="launch-row">
+        <span class="launch-row-label">Objectif</span>
+        <div class="launch-row-value">
+          <span class="launch-chip">${linesToWin} lignes</span>
+        </div>
+      </div>
+      <div class="launch-row">
+        <span class="launch-row-label">Grille</span>
+        <div class="launch-row-value">
+          <span class="launch-chip">${boardW}x${boardH}</span>
+        </div>
+      </div>
     </div>
   `;
-  const play = document.getElementById("play-btn");
+  overlay.innerHTML = `
+    <div class="launch-card">
+      <div class="launch-head">
+        <div class="launch-brand">
+          <span class="launch-badge">Arcade Galaxy</span>
+          <span class="launch-badge ghost">${config?.uiText.title || "Tetris Mini"}</span>
+        </div>
+        <h2 class="launch-title">${title}</h2>
+        ${shortDescription ? `<p class="launch-subtitle">${shortDescription}</p>` : ""}
+      </div>
+      <div class="launch-grid">
+        <section class="launch-section">
+          <h3 class="launch-section-title">Briefing</h3>
+          <p class="launch-text">${description}</p>
+        </section>
+        <section class="launch-section">
+          <h3 class="launch-section-title">Paramètres</h3>
+          ${settingsMarkup}
+        </section>
+        <section class="launch-section">
+          <h3 class="launch-section-title">Contrôles</h3>
+          <div class="launch-chips">
+            ${controlsList || `<span class="launch-chip muted">Contrôles à définir</span>`}
+          </div>
+        </section>
+      </div>
+      <div class="launch-actions">
+        ${showStart ? `<button class="launch-btn primary" id="launch-start">Lancer</button>` : ""}
+        <a class="launch-btn ghost" href="${withBasePath("/", import.meta.env.BASE_URL)}">Hub</a>
+      </div>
+    </div>
+  `;
+  const play = document.getElementById("launch-start");
   play?.addEventListener("click", startGame);
 }
 

@@ -1,4 +1,5 @@
 import "./style.css";
+import "@core/launch-menu.css";
 import { createHybridInput, createMobileControls } from "@core/input";
 import { createGameLoop } from "@core/loop";
 import { chance, clamp, rand, withBasePath } from "@core/utils";
@@ -28,7 +29,7 @@ const ui = document.getElementById("ui") as HTMLDivElement;
 const ctx = canvas.getContext("2d")!;
 const input = createHybridInput();
 const overlay = document.createElement("div");
-overlay.className = "overlay";
+overlay.className = "launch-overlay";
 overlay.style.display = "none";
 ui.appendChild(overlay);
 
@@ -152,27 +153,72 @@ function endGame(win: boolean) {
 function showOverlay(title: string, body: string, showStart = true) {
   mobileControls.hide();
   overlay.style.display = "grid";
-  overlay.innerHTML = `
-    <div class="panel">
-      <p class="pill">Dodge Rush</p>
-      <h2>${title}</h2>
-      <p>${body}</p>
-      <div class="mode-picker">
-        <label><input type="radio" name="mode" value="timed" ${state.mode === "timed" ? "checked" : ""}/> Mode chrono</label>
-        <label><input type="radio" name="mode" value="endless" ${state.mode === "endless" ? "checked" : ""}/> Mode infini</label>
-        <div class="timed-only" style="display:${state.mode === "timed" ? "block" : "none"}; margin-top:8px;">
-          <label>Durée (sec)
-            <input id="run-duration" type="number" min="10" max="999" value="${state.runDuration}" />
+  const shortDescription = config?.uiText.shortDescription || "";
+  const description = body || config?.uiText.help || "";
+  const controlsList = (config?.uiText.controls || [])
+    .map((item) => `<span class="launch-chip">${item}</span>`)
+    .join("");
+  const settingsMarkup = `
+    <div class="launch-rows">
+      <div class="launch-row">
+        <span class="launch-row-label">Mode</span>
+        <div class="launch-row-value launch-options">
+          <label class="launch-option mode-option ${state.mode === "timed" ? "is-active" : ""}">
+            <input type="radio" name="mode" value="timed" ${state.mode === "timed" ? "checked" : ""}/>
+            <span class="launch-option-title">Chrono</span>
+            <span class="launch-option-meta">${state.runDuration}s</span>
+          </label>
+          <label class="launch-option mode-option ${state.mode === "endless" ? "is-active" : ""}">
+            <input type="radio" name="mode" value="endless" ${state.mode === "endless" ? "checked" : ""}/>
+            <span class="launch-option-title">Infini</span>
+            <span class="launch-option-meta">Sans limite</span>
           </label>
         </div>
       </div>
-      <div style="display:flex; gap:10px; justify-content:center; margin-top:12px;">
-        ${showStart ? `<button class="btn" id="play-btn">Lancer</button>` : ""}
-        <a class="btn secondary" href="${withBasePath("/apps/hub/", import.meta.env.BASE_URL)}">Hub</a>
+      <div class="launch-row timed-only" style="display:${state.mode === "timed" ? "grid" : "none"};">
+        <span class="launch-row-label">Durée</span>
+        <div class="launch-row-value">
+          <label class="launch-input">
+            <input id="run-duration" type="number" min="10" max="999" value="${state.runDuration}" />
+            <span>sec</span>
+          </label>
+        </div>
       </div>
     </div>
   `;
-  const play = document.getElementById("play-btn");
+  overlay.innerHTML = `
+    <div class="launch-card">
+      <div class="launch-head">
+        <div class="launch-brand">
+          <span class="launch-badge">Arcade Galaxy</span>
+          <span class="launch-badge ghost">${config?.uiText.title || "Dodge Rush"}</span>
+        </div>
+        <h2 class="launch-title">${title}</h2>
+        ${shortDescription ? `<p class="launch-subtitle">${shortDescription}</p>` : ""}
+      </div>
+      <div class="launch-grid">
+        <section class="launch-section">
+          <h3 class="launch-section-title">Briefing</h3>
+          <p class="launch-text">${description}</p>
+        </section>
+        <section class="launch-section">
+          <h3 class="launch-section-title">Paramètres</h3>
+          ${settingsMarkup}
+        </section>
+        <section class="launch-section">
+          <h3 class="launch-section-title">Contrôles</h3>
+          <div class="launch-chips">
+            ${controlsList || `<span class="launch-chip muted">Contrôles à définir</span>`}
+          </div>
+        </section>
+      </div>
+      <div class="launch-actions">
+        ${showStart ? `<button class="launch-btn primary" id="launch-start">Lancer</button>` : ""}
+        <a class="launch-btn ghost" href="${withBasePath("/", import.meta.env.BASE_URL)}">Hub</a>
+      </div>
+    </div>
+  `;
+  const play = document.getElementById("launch-start");
   play?.addEventListener("click", startGame);
   wireModePicker();
 }
@@ -361,11 +407,19 @@ function buildStars() {
 
 function wireModePicker() {
   const modeRadios = overlay.querySelectorAll<HTMLInputElement>('input[name="mode"]');
+  const updateSelection = () => {
+    const timedOnly = overlay.querySelector<HTMLElement>(".timed-only");
+    if (timedOnly) timedOnly.style.display = state.mode === "timed" ? "grid" : "none";
+    overlay.querySelectorAll<HTMLLabelElement>(".mode-option").forEach((label) => {
+      const input = label.querySelector("input");
+      label.classList.toggle("is-active", Boolean(input?.checked));
+    });
+  };
   modeRadios.forEach((r) =>
     r.addEventListener("change", () => {
       state.mode = (r.value as Mode) || "timed";
-      const timedOnly = overlay.querySelector<HTMLElement>(".timed-only");
-      if (timedOnly) timedOnly.style.display = state.mode === "timed" ? "block" : "none";
+      updateSelection();
     }),
   );
+  updateSelection();
 }

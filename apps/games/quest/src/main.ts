@@ -1,4 +1,5 @@
 import "./style.css";
+import "@core/launch-menu.css";
 import { createHybridInput, createMobileControls } from "@core/input";
 import { createGameLoop } from "@core/loop";
 import { clamp, rand, withBasePath } from "@core/utils";
@@ -39,7 +40,7 @@ const ui = document.getElementById("ui") as HTMLDivElement;
 const ctx = canvas.getContext("2d")!;
 const input = createHybridInput();
 const overlay = document.createElement("div");
-overlay.className = "overlay";
+overlay.className = "launch-overlay";
 overlay.style.display = "none";
 ui.appendChild(overlay);
 
@@ -227,20 +228,71 @@ function showOverlay(title: string, body: string, showStart = true) {
       ? body
       : "Récupère les artefacts, esquive les pièges et repousse les monstres pour atteindre la porte.";
   const attackLabel = controls.attack === " " ? "Espace" : controls.attack;
-  overlay.style.display = "grid";
-  overlay.innerHTML = `
-    <div class="panel">
-      <p class="pill">Mini Quest · Montée en tension</p>
-      <h2>${title}</h2>
-      <p>${description}</p>
-      <p class="subtext">Chaque porte réduit le temps disponible et renforce les ennemis : plus rapides, plus nombreux. Collecte tout, évite les pièges et frappe (${attackLabel}) pour les repousser.</p>
-      <div style="display:flex; gap:10px; justify-content:center; margin-top:12px; flex-wrap:wrap;">
-        ${showStart ? `<button class="btn" id="play-btn">Lancer</button>` : ""}
-        <a class="btn secondary" href="${withBasePath("/apps/hub/", import.meta.env.BASE_URL)}">Hub</a>
+  const shortDescription = config?.uiText.shortDescription || "";
+  const controlsList = (config?.uiText.controls || [])
+    .map((item) => `<span class="launch-chip">${item}</span>`)
+    .join("");
+  const timeLimit = config?.difficultyParams.timeLimitSeconds ?? 90;
+  const itemCount = config?.difficultyParams.itemCount ?? 6;
+  const trapCount = config?.difficultyParams.trapCount ?? 4;
+  const settingsMarkup = `
+    <div class="launch-rows">
+      <div class="launch-row">
+        <span class="launch-row-label">Mode</span>
+        <div class="launch-row-value">
+          <span class="launch-chip">Chrono</span>
+        </div>
+      </div>
+      <div class="launch-row">
+        <span class="launch-row-label">Temps</span>
+        <div class="launch-row-value">
+          <span class="launch-chip">${timeLimit}s</span>
+        </div>
+      </div>
+      <div class="launch-row">
+        <span class="launch-row-label">Totems</span>
+        <div class="launch-row-value">
+          <span class="launch-chip">${itemCount}</span>
+          <span class="launch-chip muted">Pièges ${trapCount}</span>
+        </div>
       </div>
     </div>
   `;
-  const play = document.getElementById("play-btn");
+  overlay.style.display = "grid";
+  overlay.innerHTML = `
+    <div class="launch-card">
+      <div class="launch-head">
+        <div class="launch-brand">
+          <span class="launch-badge">Arcade Galaxy</span>
+          <span class="launch-badge ghost">${config?.uiText.title || "Mini Quest"}</span>
+        </div>
+        <h2 class="launch-title">${title}</h2>
+        ${shortDescription ? `<p class="launch-subtitle">${shortDescription}</p>` : ""}
+      </div>
+      <div class="launch-grid">
+        <section class="launch-section">
+          <h3 class="launch-section-title">Briefing</h3>
+          <p class="launch-text">${description}</p>
+          <p class="launch-note">Chaque porte réduit le temps disponible et renforce les ennemis. Collecte tout, évite les pièges et frappe (${attackLabel}) pour les repousser.</p>
+        </section>
+        <section class="launch-section">
+          <h3 class="launch-section-title">Paramètres</h3>
+          ${settingsMarkup}
+        </section>
+        <section class="launch-section">
+          <h3 class="launch-section-title">Contrôles</h3>
+          <div class="launch-chips">
+            ${controlsList || `<span class="launch-chip muted">Contrôles à définir</span>`}
+          </div>
+        </section>
+      </div>
+      <div class="launch-actions">
+        ${showStart ? `<button class="launch-btn primary" id="launch-start">Lancer</button>` : ""}
+        <a class="launch-btn ghost" href="${withBasePath("/", import.meta.env.BASE_URL)}">Hub</a>
+      </div>
+    </div>
+  `;
+  const play = document.getElementById("launch-start");
   play?.addEventListener("click", startGame);
 }
 
