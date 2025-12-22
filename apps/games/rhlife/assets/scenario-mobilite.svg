@@ -1,0 +1,20 @@
+<svg width="520" height="320" viewBox="0 0 520 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="520" height="320" rx="28" fill="#0b101a" />
+  <rect x="32" y="28" width="456" height="264" rx="24" fill="#0f172a" stroke="#1f2937" stroke-width="2" />
+  <rect x="70" y="76" width="170" height="170" rx="20" fill="#111827" stroke="#2b3648" stroke-width="2" />
+  <rect x="100" y="64" width="110" height="20" rx="10" fill="#2b3648" />
+  <rect x="96" y="102" width="118" height="84" rx="12" fill="#0b1324" />
+  <rect x="104" y="112" width="48" height="8" rx="4" fill="#94a3b8" />
+  <rect x="104" y="128" width="70" height="8" rx="4" fill="#475569" />
+  <rect x="96" y="192" width="118" height="10" rx="5" fill="#1f2937" />
+  <circle cx="110" cy="210" r="8" fill="#ffd166" />
+  <circle cx="200" cy="210" r="8" fill="#ffd166" />
+  <path d="M278 110h150" stroke="#64f4ac" stroke-width="10" stroke-linecap="round" />
+  <path d="M404 86l24 24-24 24" stroke="#64f4ac" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M430 210h-150" stroke="#ff6b6b" stroke-width="10" stroke-linecap="round" />
+  <path d="M304 186l-24 24 24 24" stroke="#ff6b6b" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+  <rect x="292" y="126" width="150" height="70" rx="18" fill="#0b1324" stroke="#2b3648" stroke-width="2" />
+  <rect x="312" y="144" width="70" height="10" rx="5" fill="#94a3b8" />
+  <rect x="312" y="160" width="92" height="10" rx="5" fill="#475569" />
+  <text x="68" y="266" fill="#94a3b8" font-size="12" font-family="Space Grotesk, sans-serif">mobility deck</text>
+</svg>

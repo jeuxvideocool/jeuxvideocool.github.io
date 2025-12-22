@@ -131,6 +131,24 @@ body {
   color: var(--color-text);
 }
 
+.rh-illustration {
+  width: 100%;
+  height: clamp(160px, 26vw, 230px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.25);
+  margin-bottom: 14px;
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.35);
+}
+
+.rh-illustration img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
 .rh-gauge {
   display: flex;
   flex-direction: column;

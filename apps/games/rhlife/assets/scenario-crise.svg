@@ -1,0 +1,19 @@
+<svg width="520" height="320" viewBox="0 0 520 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="520" height="320" rx="28" fill="#0b101a" />
+  <rect x="32" y="28" width="456" height="264" rx="24" fill="#0f172a" stroke="#1f2937" stroke-width="2" />
+  <rect x="64" y="76" width="200" height="140" rx="18" fill="#0b1324" stroke="#2b3648" stroke-width="2" />
+  <rect x="82" y="94" width="120" height="10" rx="5" fill="#94a3b8" />
+  <rect x="82" y="112" width="160" height="10" rx="5" fill="#475569" />
+  <rect x="82" y="130" width="140" height="10" rx="5" fill="#94a3b8" />
+  <rect x="82" y="148" width="110" height="10" rx="5" fill="#475569" />
+  <rect x="82" y="166" width="150" height="10" rx="5" fill="#94a3b8" />
+  <rect x="300" y="110" width="150" height="90" rx="20" fill="#111827" stroke="#2b3648" stroke-width="2" />
+  <path d="M312 132l80 18-80 18" fill="#ff6b6b" />
+  <path d="M398 128c16 10 24 24 24 40" stroke="#ffd166" stroke-width="6" stroke-linecap="round" />
+  <path d="M408 122c20 12 32 30 32 50" stroke="#ffd166" stroke-width="4" stroke-linecap="round" />
+  <path d="M420 116c24 14 38 36 38 60" stroke="#ffd166" stroke-width="3" stroke-linecap="round" />
+  <circle cx="356" cy="224" r="12" fill="#ff6b6b" />
+  <circle cx="380" cy="224" r="12" fill="#ffd166" />
+  <circle cx="404" cy="224" r="12" fill="#64f4ac" />
+  <text x="70" y="244" fill="#94a3b8" font-size="12" font-family="Space Grotesk, sans-serif">crisis memo</text>
+</svg>

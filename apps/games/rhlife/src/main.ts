@@ -89,6 +89,24 @@ const gaugeMap = new Map(gauges.map((gauge) => [gauge.id, gauge]));
 const defaultGauge = config?.difficultyParams.startingGauge ?? 50;
 const minGauge = config?.difficultyParams.minGauge ?? 0;
 const maxGauge = config?.difficultyParams.maxGauge ?? 100;
+const scenarioArt: Record<string, { src: string; alt: string }> = {
+  "intro-barometre": {
+    src: new URL("../assets/scenario-intro.svg", import.meta.url).href,
+    alt: "Tableau de barometre avec indicateurs instables.",
+  },
+  "mobilite-agile": {
+    src: new URL("../assets/scenario-mobilite.svg", import.meta.url).href,
+    alt: "Valise et fleches de mobilite interne.",
+  },
+  calibration: {
+    src: new URL("../assets/scenario-calibration.svg", import.meta.url).href,
+    alt: "Grille de performance avec classement et croix rouges.",
+  },
+  "crise-publique": {
+    src: new URL("../assets/scenario-crise.svg", import.meta.url).href,
+    alt: "Megaphone et memo de crise.",
+  },
+};
 
 if (theme) {
   const root = document.documentElement.style;
@@ -290,6 +308,10 @@ function renderScenario() {
   const visibleGauges = gauges.filter((gauge) => gauge.visible);
   const hiddenGauges = gauges.filter((gauge) => !gauge.visible);
   const deferredMarkup = renderDeferredNotices(state.deferredNow);
+  const art = scenarioArt[scenario.id];
+  const artMarkup = art
+    ? `<div class="rh-illustration"><img src="${art.src}" alt="${art.alt}" /></div>`
+    : "";
   const resultMarkup = state.activeResult ? renderResult(state.activeResult) : "";
   const choicesMarkup = state.activeResult
     ? ""
@@ -324,6 +346,7 @@ function renderScenario() {
       </section>
       <section class="rh-panel">
         ${deferredMarkup}
+        ${artMarkup}
         <h2>Contexte narratif</h2>
         <div class="rh-context">
           ${renderContextItem("Mail", scenario.context.mail)}

@@ -63,17 +63,17 @@
       "title": "Semaine 1 - Barometre qui gratte",
       "difficulty": 1,
       "context": {
-        "mail": "Objet: Barometre Q2 - merci d'eviter les verbatims bruts.",
-        "meeting": "Reunion hebdo RH: on communique sur l'energie, pas sur les irritants.",
-        "rumor": "Rumeur: les resultats seront filtres avant diffusion.",
-        "incident": "Incident discret: un tableau d'arrets a tourne sur Teams.",
-        "urgentRequest": "Demande urgente: COMEX veut une note positive avant demain 9h."
+        "mail": "Objet: Barometre Q2 - merci d'eviter les verbatims qui sentent la merde.",
+        "meeting": "Reunion hebdo RH: on vend l'energie, pas les irritants. Pas de slide qui pique.",
+        "rumor": "Rumeur: la version brute circule deja en PDF 'pas pour diffusion'.",
+        "incident": "Incident discret: une capture des arrets a atterri sur le channel memes.",
+        "urgentRequest": "Demande urgente: COMEX veut une note clean avant demain 9h."
       },
-      "problem": "Le barometre remonte un malaise net. Le terrain veut de la transparence. Le management veut un message propre.",
+      "problem": "Le barometre crie. Le terrain veut des actes, la direction veut un vernis. Tu choisis ce qui se voit.",
       "choices": [
         {
           "id": "intro-optimize",
-          "label": "Publier une synthese optimisee avec actions rapides.",
+          "label": "Publier une synthese optimisee, actions rapides et vocabulaire positif.",
           "immediateEffects": {
             "satisfaction": 4,
             "performance": 2,
@@ -87,7 +87,7 @@
           "deferredConsequences": [
             {
               "delay": 2,
-              "summary": "Fuite des verbatims bruts. Indignation en interne.",
+              "summary": "Fuite des verbatims bruts. Indignation froide et documentee.",
               "event": "Un cadre partage le fichier original a un collectif.",
               "effects": {
                 "satisfaction": -6,
@@ -97,13 +97,13 @@
               }
             }
           ],
-          "feedback": "Synthese alignee. Message recu. On respire.",
-          "futureEvent": "Risque de fuite si un verbatim circule.",
+          "feedback": "Synthese alignee. L'Excel respire. On gagne une journee.",
+          "futureEvent": "Risque de fuite si un verbatim sale ressort.",
           "endingImpact": "Renforce une trajectoire performante mais impopulaire."
         },
         {
           "id": "intro-listen",
-          "label": "Organiser des ateliers d'ecoute limites et anonymes.",
+          "label": "Lancer des ateliers d'ecoute limites, anonymes, avec cadrage serre.",
           "immediateEffects": {
             "satisfaction": 6,
             "performance": -2,
@@ -126,13 +126,13 @@
               }
             }
           ],
-          "feedback": "Signal humain envoye. Agenda alourdi.",
+          "feedback": "Signal humain envoye. Agenda surcharge. Le COMEX soupire.",
           "futureEvent": "Risque d'effet boomerang si rien ne suit.",
           "endingImpact": "Favorise une fin humaine mais politisee."
         },
         {
           "id": "intro-legal",
-          "label": "Remonter l'alerte au juridique et geler la comm.",
+          "label": "Remonter l'alerte au juridique et geler la comm, le temps de blinder.",
           "immediateEffects": {
             "satisfaction": -3,
             "performance": -1,
@@ -146,7 +146,7 @@
           "deferredConsequences": [
             {
               "delay": 1,
-              "summary": "Le juridique demande des traces et des preuves.",
+              "summary": "Le juridique demande des traces et des preuves. Ca gratte.",
               "event": "Audit interne surprise.",
               "effects": {
                 "pressure": 3,
@@ -156,7 +156,7 @@
               }
             }
           ],
-          "feedback": "Couverture legale solide. Ambiance raidie.",
+          "feedback": "Couverture legale solide. Ambiance crispee.",
           "futureEvent": "Audit interne si les signaux se confirment.",
           "endingImpact": "Rend plausible une fin sacrifiee par le systeme."
         }
@@ -167,13 +167,13 @@
       "title": "Semaine 3 - Mobilite agile",
       "difficulty": 2,
       "context": {
-        "mail": "Objet: Projet Mobilite Agile - rationaliser les effectifs.",
-        "meeting": "Comite managers: on requalifie les postes, pas besoin de filer la parano.",
-        "rumor": "Rumeur: une liste de 40 noms circule.",
-        "incident": "Incident discret: un manager annonce un changement de poste sans RH.",
+        "mail": "Objet: Projet Mobilite Agile - rationaliser sans dire le mot qui fache.",
+        "meeting": "Comite managers: on requalifie les postes, pas besoin de filer la trouille.",
+        "rumor": "Rumeur: une liste de 40 noms circule, avec des smileys.",
+        "incident": "Incident discret: un manager annonce un changement sans RH, c'est le bordel.",
         "urgentRequest": "Demande urgente: CFO veut un plan low noise d'ici vendredi."
       },
-      "problem": "Le plan de mobilite reduit les couts mais fracture les equipes. Tu dois cadrer la methode.",
+      "problem": "Le plan coupe dans les couts et dans le moral. On veut de l'agile, pas de la casse. Tu cadres la methode.",
       "choices": [
         {
           "id": "mobilite-force",
@@ -200,7 +200,7 @@
               }
             }
           ],
-          "feedback": "Plan accelere. Tension assumee.",
+          "feedback": "Plan accelere. Froid mais net. Ca sent la poussiere froide.",
           "futureEvent": "Risque de contentieux si un dossier sort.",
           "endingImpact": "Renforce la trajectoire DRH performante mais detestee."
         },
@@ -229,7 +229,7 @@
               }
             }
           ],
-          "feedback": "Tu gagnes du temps, pas du credit.",
+          "feedback": "Tu gagnes du temps, pas du credit. Les managers grognent.",
           "futureEvent": "Phase 2 conditionnee aux resultats.",
           "endingImpact": "Favorise une fin humaine mais marginalisee."
         },
@@ -249,8 +249,8 @@
           "deferredConsequences": [
             {
               "delay": 1,
-              "summary": "Le sponsor cherche un contournement.",
-              "event": "Un cabinet externe arrive avec un plan sec.",
+              "summary": "Le sponsor cherche un contournement. Cabinet externe.",
+              "event": "Un cabinet arrive avec un plan sec.",
               "effects": {
                 "pressure": 4,
                 "performance": -2,
@@ -258,7 +258,7 @@
               }
             }
           ],
-          "feedback": "Position principielle. Alliances fragiles.",
+          "feedback": "Position principielle. Alliances fragiles. Ca peut te revenir.",
           "futureEvent": "Cabinet externe si l'arbitrage patine.",
           "endingImpact": "Rend plausible une fin sacrifiee ou isolee."
         }
@@ -269,13 +269,13 @@
       "title": "Semaine 6 - Calibration des performances",
       "difficulty": 3,
       "context": {
-        "mail": "Objet: Ajustement bonus - marge Q3.",
-        "meeting": "Reunion managers: on doit sortir 10% en plan de perf.",
-        "rumor": "Rumeur: une liste des trop chers circule.",
-        "incident": "Incident discret: un employe craque en open space.",
+        "mail": "Objet: Ajustement bonus - marge Q3. On ne dit pas plan social.",
+        "meeting": "Reunion managers: on doit sortir 10% en plan de perf, vite et propre.",
+        "rumor": "Rumeur: une liste des trop chers circule, onglet 'chiants'.",
+        "incident": "Incident discret: un employe craque en open space, chaise renversee.",
         "urgentRequest": "Demande urgente: liste PIP pour demain 18h."
       },
-      "problem": "Le tri demande du management parait 'inevitable'. Chaque scenario casse quelque chose.",
+      "problem": "Le tri parait inevitable. Personne ne veut se salir les mains, tout le monde veut les chiffres.",
       "choices": [
         {
           "id": "calibration-forced",
@@ -302,7 +302,7 @@
               }
             }
           ],
-          "feedback": "Liste livree. Silence dans les couloirs.",
+          "feedback": "Liste livree. Silence dans les couloirs. Ca pue le non-dit.",
           "futureEvent": "Risque d'arret collectif si la liste fuit.",
           "endingImpact": "Pousse vers DRH performant mais deteste."
         },
@@ -331,7 +331,7 @@
               }
             }
           ],
-          "feedback": "Tu gagnes du lien, pas des lignes de budget.",
+          "feedback": "Tu gagnes du lien, pas des lignes de budget. Le CFO grimace.",
           "futureEvent": "La charge revient en boomerang.",
           "endingImpact": "Renforce une fin humaine mais marginalisee."
         },
@@ -360,7 +360,7 @@
               }
             }
           ],
-          "feedback": "Posture claire. Couloir politique ferme.",
+          "feedback": "Posture claire. Couloir politique ferme. Tu le sens venir.",
           "futureEvent": "Retrait de dossier si la tension monte.",
           "endingImpact": "Rend plausible une fin sacrifiee."
         }
@@ -371,11 +371,11 @@
       "title": "Semaine 9 - Exposition publique",
       "difficulty": 4,
       "context": {
-        "mail": "Objet: Article presse en preparation.",
+        "mail": "Objet: Article presse en preparation. Ne pas repondre a chaud.",
         "meeting": "Comite de crise: on aligne la narration, pas les details.",
-        "rumor": "Rumeur: les syndicats preparent un appel public.",
-        "incident": "Incident discret: un post LinkedIn anonyme cite la boite.",
-        "urgentRequest": "Demande urgente: preparer un memo et un nom de porte-parole."
+        "rumor": "Rumeur: les syndicats preparent un appel public, ton nom circule.",
+        "incident": "Incident discret: un post LinkedIn anonyme cite la boite. Ca buzze.",
+        "urgentRequest": "Demande urgente: memo et nom de porte-parole, idealement pas toi."
       },
       "problem": "L'exterieur regarde enfin. La RH devient visible. Le systeme veut un fusible.",
       "choices": [
@@ -433,7 +433,7 @@
               }
             }
           ],
-          "feedback": "Conformite sauvee. Autorite entamee.",
+          "feedback": "Conformite sauvee. Autorite entamee. Tu perds la main.",
           "futureEvent": "Tutelle si l'inspection conclut a un risque.",
           "endingImpact": "Peut mener a une fin humaine mais marginalisee."
         },
@@ -463,7 +463,7 @@
               }
             }
           ],
-          "feedback": "Surface propre. Fond inquiet.",
+          "feedback": "Surface propre. Fond inquiet. Les memes vont plus vite.",
           "futureEvent": "Risque de backlash public si la campagne tourne mal.",
           "endingImpact": "Renforce une fin cynique ou broyee."
         }
@@ -474,7 +474,7 @@
     {
       "id": "burnout",
       "title": "RH broyee",
-      "description": "Tu tiens la barque a mains nues. Le systeme te remplace sans bruit.",
+      "description": "Tu tiens la barque a mains nues. Tu craques. Le systeme t'oublie vite.",
       "min": { "burnout": 80, "pressure": 70 }
     },
     {
@@ -486,7 +486,7 @@
     {
       "id": "cynic",
       "title": "RH devenu cynique",
-      "description": "Tu parles Excel. Tu penses Excel. Tu ne ressens plus grand-chose.",
+      "description": "Tu parles KPI. Tu dors Excel. Tu ne ressens plus grand-chose.",
       "min": { "cynicism": 70, "reputation": 40 }
     },
     {
