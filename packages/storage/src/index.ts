@@ -80,6 +80,8 @@ const SaveSchema = z.object({
   games: z.record(GameSaveSchema).default({}),
 });
 
+const MAX_NUMERIC_VALUE = Number.MAX_SAFE_INTEGER;
+
 export function createEmptySave(): SaveState {
   return {
     schemaVersion: CURRENT_SCHEMA_VERSION,
@@ -97,6 +99,56 @@ export function createEmptySave(): SaveState {
     favorites: [],
     games: {},
   };
+}
+
+function sanitizeNumber(value: number, fallback: number, min = -MAX_NUMERIC_VALUE, max = MAX_NUMERIC_VALUE) {
+  if (!Number.isFinite(value)) return fallback;
+  return Math.min(max, Math.max(min, value));
+}
+
+function sanitizeNonNegative(value: number, fallback = 0, max = MAX_NUMERIC_VALUE) {
+  return sanitizeNumber(value, fallback, 0, max);
+}
+
+function sanitizeOptionalNumber(
+  value: number | undefined,
+  fallback?: number,
+  min = 0,
+  max = MAX_NUMERIC_VALUE,
+) {
+  if (value === undefined) return undefined;
+  if (!Number.isFinite(value)) return fallback;
+  return Math.min(max, Math.max(min, value));
+}
+
+function sanitizeSaveNumbers(save: SaveState): SaveState {
+  save.globalXP = sanitizeNonNegative(save.globalXP, 0);
+  save.globalLevel = Math.max(1, Math.trunc(sanitizeNonNegative(save.globalLevel, 1)));
+  save.globalStats.gamesPlayed = Math.trunc(sanitizeNonNegative(save.globalStats.gamesPlayed, 0));
+  save.globalStats.totalSessions = Math.trunc(sanitizeNonNegative(save.globalStats.totalSessions, 0));
+  save.globalStats.timePlayedMs = sanitizeNonNegative(save.globalStats.timePlayedMs, 0);
+  save.globalStats.currentSessionStartedAt = sanitizeOptionalNumber(
+    save.globalStats.currentSessionStartedAt,
+    undefined,
+  );
+
+  Object.entries(save.globalStats.events || {}).forEach(([key, value]) => {
+    save.globalStats.events[key] = Math.trunc(sanitizeNonNegative(value, 0));
+  });
+  Object.entries(save.globalStats.streaks || {}).forEach(([key, value]) => {
+    save.globalStats.streaks[key] = Math.trunc(sanitizeNonNegative(value, 0));
+  });
+
+  Object.values(save.games || {}).forEach((game) => {
+    game.saveSchemaVersion = Math.max(1, Math.trunc(sanitizeNonNegative(game.saveSchemaVersion, 1)));
+    game.lastPlayedAt = sanitizeOptionalNumber(game.lastPlayedAt, undefined);
+    game.bestScore = sanitizeOptionalNumber(game.bestScore, undefined);
+    game.timePlayedMs = sanitizeNonNegative(game.timePlayedMs ?? 0, 0);
+    game.sessionStartedAt = sanitizeOptionalNumber(game.sessionStartedAt, undefined);
+    game.xpEarned = sanitizeNonNegative(game.xpEarned ?? 0, 0);
+  });
+
+  return save;
 }
 
 function migrateSave(save: SaveState): SaveState {
@@ -125,7 +177,7 @@ function migrateSave(save: SaveState): SaveState {
   if (current.schemaVersion < CURRENT_SCHEMA_VERSION) {
     current.schemaVersion = CURRENT_SCHEMA_VERSION;
   }
-  return current;
+  return sanitizeSaveNumbers(current);
 }
 
 export function loadSave(): SaveState {
