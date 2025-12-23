@@ -835,6 +835,9 @@ textarea:focus {
     width: 100%;
     justify-content: center;
   }
+  .achievement-spotlight {
+    grid-template-columns: 1fr;
+  }
 }
 
 .badge {
@@ -858,18 +861,121 @@ textarea:focus {
   gap: 12px;
 }
 
+.achievements-page {
+  position: relative;
+  padding: 18px;
+  border-radius: 24px;
+  background: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(124, 255, 225, 0.1) 38%,
+    rgba(255, 126, 226, 0.12) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 28px 60px rgba(8, 12, 22, 0.3);
+  overflow: hidden;
+}
+
+.achievements-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 12% 20%, rgba(255, 255, 255, 0.28), transparent 45%),
+    radial-gradient(circle at 88% 12%, rgba(255, 236, 200, 0.2), transparent 40%);
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.achievements-page > * {
+  position: relative;
+  z-index: 1;
+}
+
+.achievement-spotlight {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 14px;
+  margin: 12px 0 18px;
+}
+
+.achievement-message textarea {
+  width: 100%;
+  min-height: 120px;
+  resize: vertical;
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.message-preview {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.message-preview p {
+  margin: 6px 0 0;
+  font-weight: 600;
+}
+
+.achievement-progress {
+  display: grid;
+  gap: 6px;
+  align-content: center;
+  text-align: center;
+}
+
+.progress-ring {
+  --progress: 0;
+  width: 140px;
+  height: 140px;
+  margin: 6px auto 8px;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--color-secondary) calc(var(--progress) * 1%),
+    rgba(255, 255, 255, 0.15) 0
+  );
+  position: relative;
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+
+.progress-ring::after {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(7, 19, 41, 0.88), rgba(7, 19, 41, 0.62));
+}
+
+.progress-ring span {
+  position: relative;
+  z-index: 1;
+  font-weight: 800;
+  font-size: 20px;
+}
+
 .achievement {
   display: flex;
   align-items: center;
   gap: 14px;
-  opacity: 0.6;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  opacity: 0.78;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(
+    140deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(124, 255, 225, 0.14) 45%,
+    rgba(255, 126, 226, 0.12) 100%
+  );
+  box-shadow: 0 16px 30px rgba(8, 12, 22, 0.22);
 }
 
 .achievement.unlocked {
   opacity: 1;
-  border-color: rgba(255, 255, 255, 0.18);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 18px 40px rgba(124, 255, 225, 0.18), 0 12px 30px rgba(0, 0, 0, 0.3);
 }
 
 .reward {

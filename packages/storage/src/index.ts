@@ -23,6 +23,7 @@ export type SaveState = {
     avatarType?: "emoji" | "image";
     avatarStoragePath?: string;
     lastPlayedGameId?: string;
+    achievementMessage: string;
   };
   globalXP: number;
   globalLevel: number;
@@ -59,8 +60,9 @@ const SaveSchema = z.object({
       avatarType: z.enum(["emoji", "image"]).optional(),
       avatarStoragePath: z.string().optional(),
       lastPlayedGameId: z.string().optional(),
+      achievementMessage: z.string().default(""),
     })
-    .default({ name: "Joueur", avatar: "🎮", avatarType: "emoji" }),
+    .default({ name: "Joueur", avatar: "🎮", avatarType: "emoji", achievementMessage: "" }),
   globalXP: z.number().default(0),
   globalLevel: z.number().default(1),
   achievementsUnlocked: z.array(z.string()).default([]),
@@ -81,7 +83,7 @@ const SaveSchema = z.object({
 export function createEmptySave(): SaveState {
   return {
     schemaVersion: CURRENT_SCHEMA_VERSION,
-    playerProfile: { name: "Joueur", avatar: "🎮", avatarType: "emoji" },
+    playerProfile: { name: "Joueur", avatar: "🎮", avatarType: "emoji", achievementMessage: "" },
     globalXP: 0,
     globalLevel: 1,
     achievementsUnlocked: [],

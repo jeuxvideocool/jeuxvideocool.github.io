@@ -667,6 +667,16 @@ function renderGameGrid() {
 
 function renderAchievements() {
   const unlocked = new Set(snapshot.save.achievementsUnlocked);
+  const total = achievementsConfig.achievements.length;
+  const progress = total ? Math.round((unlocked.size / total) * 100) : 0;
+  const message = snapshot.save.playerProfile.achievementMessage || "";
+  const safeMessage = message
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+  const previewMessage = message.trim() ? safeMessage : "Ecris un message pour Alexiane.";
   const list = achievementsConfig.achievements
     .map((ach) => {
       const isUnlocked = unlocked.has(ach.id);
@@ -690,7 +700,33 @@ function renderAchievements() {
         <div>
           <p class="eyebrow">Succès</p>
           <h2>Collection</h2>
-          <p class="muted">${unlocked.size} / ${achievementsConfig.achievements.length} débloqués</p>
+          <p class="muted">${unlocked.size} / ${total} débloqués</p>
+        </div>
+        <div class="pill accent">✨ ${progress}%</div>
+      </div>
+      <div class="achievement-spotlight">
+        <div class="card achievement-message">
+          <div class="card-top">
+            <div>
+              <p class="eyebrow">Message perso</p>
+              <h3>Pour Alexiane</h3>
+              <p class="muted small">Un mot doux qui s'affiche dans la collection.</p>
+            </div>
+            <span class="chip ghost">Privé</span>
+          </div>
+          <textarea id="achievement-note" placeholder="Alexiane, ...">${safeMessage}</textarea>
+          <div class="message-preview">
+            <span class="label">Aperçu</span>
+            <p id="achievement-note-preview">${previewMessage}</p>
+          </div>
+        </div>
+        <div class="card achievement-progress">
+          <p class="eyebrow">Progression</p>
+          <h3>${unlocked.size} succès</h3>
+          <div class="progress-ring" style="--progress:${progress}">
+            <span>${progress}%</span>
+          </div>
+          <p class="muted small">${total} objectifs pour une collection premium.</p>
         </div>
       </div>
       <div class="stack">${list}</div>
@@ -1303,6 +1339,19 @@ function wireEvents() {
       handleProfileChange(nameInput?.value || "Joueur", avatarInput.value),
     );
   }
+
+  const noteInput = document.getElementById("achievement-note") as HTMLTextAreaElement | null;
+  const notePreview = document.getElementById("achievement-note-preview");
+  noteInput?.addEventListener("input", () => {
+    const next = noteInput.value.slice(0, 280);
+    if (noteInput.value !== next) noteInput.value = next;
+    updateSave((state) => {
+      state.playerProfile.achievementMessage = next;
+    });
+    if (notePreview) {
+      notePreview.textContent = next.trim() ? next : "Ecris un message pour Alexiane.";
+    }
+  });
 
   document.querySelectorAll<HTMLButtonElement>(".help-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
