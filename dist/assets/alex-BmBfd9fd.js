@@ -1,4 +1,4 @@
-import{A as y,w as v,g as k,c as R}from"./index-CsvP8RUZ.js";import{subscribe as T,getAuthState as X}from"./cloud-CQZoWt0Z.js";const g=document.getElementById("app");let h=X(),P=!1,c=null,$="";function D(){g.innerHTML=`
+import{A as y,w as v,g as k,c as R}from"./index-B6i0FuKJ.js";import{subscribe as T,getAuthState as X}from"./cloud-pzIiTvlj.js";const g=document.getElementById("app");let h=X(),P=!1,c=null,$="";function D(){g.innerHTML=`
     <div class="page">
       <main class="shell">
         <header class="hero">

@@ -39,6 +39,10 @@ const controls = {
   boost: config?.input.keys.boost || "ArrowUp",
 };
 
+const laneChangeSpeed = 10;
+const laneRepeatDelay = 0.24;
+const laneRepeatInterval = 0.14;
+
 const mobileControls = createMobileControlManager({
   gameId: GAME_ID,
   container: document.body,
@@ -166,7 +170,7 @@ const state = {
   laneWidth: 0,
   laneCount: config?.difficultyParams.laneCount ?? 3,
   lanes: [] as number[],
-  player: { lane: 1, y: 0.78, speed: 0, boost: 0, cooldown: 0 },
+  player: { lane: 1, lanePos: 1, y: 0.78, speed: 0, boost: 0, cooldown: 0 },
   traffic: [] as Entity[],
   items: [] as Item[],
   distance: 0,
@@ -183,6 +187,11 @@ const state = {
   malusSpawnMs: baseMalusSpawnMs,
   winDistance: baseWinDistance,
   effects: { slow: 0, speedUp: 0, invert: 0 },
+};
+
+const laneInput = {
+  left: { held: 0, nextRepeat: 0, wasDown: false },
+  right: { held: 0, nextRepeat: 0, wasDown: false },
 };
 
 function syncLanes() {
@@ -221,8 +230,11 @@ function applyDifficulty(preset: (typeof difficultyPresets)[DifficultyKey]) {
 
 function reset() {
   state.player.lane = Math.floor(state.laneCount / 2);
+  state.player.lanePos = state.player.lane;
   state.player.boost = 0;
   state.player.cooldown = 0;
+  laneInput.left = { held: 0, nextRepeat: 0, wasDown: false };
+  laneInput.right = { held: 0, nextRepeat: 0, wasDown: false };
   state.distance = 0;
   state.traffic = [];
   state.items = [];
@@ -287,26 +299,39 @@ function getTrafficMinGap() {
   return Math.max(0.18, (carHeight / state.height) * 1.2);
 }
 
+function getItemMinGap() {
+  const itemSize = state.laneWidth * 0.5;
+  return Math.max(0.2, (itemSize / state.height) * 1.2);
+}
+
 function isLaneSpawnable(lane: number) {
   const minGap = getTrafficMinGap();
   return !state.traffic.some((car) => car.lane === lane && car.y < minGap);
 }
 
+function isItemSpawnable(lane: number) {
+  const minGap = getItemMinGap();
+  const trafficBlocked = state.traffic.some((car) => car.lane === lane && car.y < minGap);
+  const itemBlocked = state.items.some((item) => item.lane === lane && item.y < minGap);
+  return !trafficBlocked && !itemBlocked;
+}
+
 function pickSafeLane() {
-  let bestLane = state.lanes[0] ?? 0;
-  let bestScore = Infinity;
-  for (const lane of state.lanes) {
-    let nearest = -Infinity;
-    for (const car of state.traffic) {
-      if (car.lane === lane && car.y > nearest) nearest = car.y;
-    }
-    const score = nearest < 0 ? -1 : nearest;
-    if (score < bestScore) {
-      bestScore = score;
-      bestLane = lane;
-    }
-  }
-  return bestLane;
+  const spawnable = state.lanes.filter((lane) => isLaneSpawnable(lane));
+  if (spawnable.length) return pickRandomFrom(spawnable);
+  return pickRandomFrom(state.lanes);
+}
+
+function pickItemLane() {
+  const available = state.lanes.filter((lane) => isItemSpawnable(lane));
+  if (!available.length) return null;
+  const scored = available.map((lane) => ({
+    lane,
+    count: state.traffic.filter((car) => car.lane === lane).length,
+  }));
+  const minCount = scored.reduce((min, entry) => Math.min(min, entry.count), Infinity);
+  const options = scored.filter((entry) => entry.count === minCount).map((entry) => entry.lane);
+  return pickRandomFrom(options.length ? options : available);
 }
 
 function spawnTrafficInLane(lane: number) {
@@ -327,7 +352,8 @@ function spawnTrafficRow() {
 
 function spawnItem(kind: ItemKind) {
   if (!state.lanes.length) return;
-  const lane = pickRandomFrom(state.lanes);
+  const lane = pickItemLane();
+  if (lane === null) return;
   state.items.push({ lane, y: -0.3, kind });
 }
 
@@ -372,6 +398,15 @@ function moveLane(delta: number) {
   state.player.lane = clamp(state.player.lane + delta, 0, state.laneCount - 1);
 }
 
+function updateLanePosition(dt: number) {
+  const delta = state.player.lane - state.player.lanePos;
+  if (Math.abs(delta) < 0.001) {
+    state.player.lanePos = state.player.lane;
+    return;
+  }
+  state.player.lanePos += delta * Math.min(1, dt * laneChangeSpeed);
+}
+
 function handleBoost(dt: number) {
   state.player.cooldown = Math.max(0, state.player.cooldown - dt * 1000);
   state.player.boost = Math.max(0, state.player.boost - dt * 1000);
@@ -384,10 +419,36 @@ function handleBoost(dt: number) {
   }
 }
 
-function handleInput() {
+function handleInput(dt: number) {
   const inverted = state.effects.invert > 0;
-  if (input.isDown(controls.left)) moveLane(inverted ? 1 : -1);
-  if (input.isDown(controls.right)) moveLane(inverted ? -1 : 1);
+  const leftDownRaw = input.isDown(controls.left);
+  const rightDownRaw = input.isDown(controls.right);
+  const leftDown = inverted ? rightDownRaw : leftDownRaw;
+  const rightDown = inverted ? leftDownRaw : rightDownRaw;
+
+  const updateDirection = (key: "left" | "right", down: boolean, delta: number) => {
+    const entry = laneInput[key];
+    if (!down) {
+      entry.held = 0;
+      entry.nextRepeat = 0;
+      entry.wasDown = false;
+      return;
+    }
+    entry.held += dt;
+    if (!entry.wasDown) {
+      moveLane(delta);
+      entry.wasDown = true;
+      entry.nextRepeat = laneRepeatDelay;
+      return;
+    }
+    if (entry.nextRepeat > 0 && entry.held >= entry.nextRepeat) {
+      moveLane(delta);
+      entry.nextRepeat += laneRepeatInterval;
+    }
+  };
+
+  updateDirection("left", leftDown, -1);
+  updateDirection("right", rightDown, 1);
 }
 
 function updateEntities(dt: number, speedFactor: number) {
@@ -404,7 +465,7 @@ function checkCollisions() {
   const carY = state.height * state.player.y;
   const carHalf = state.laneWidth * 0.35;
   for (const car of state.traffic) {
-    if (car.lane !== state.player.lane) continue;
+    if (Math.abs(car.lane - state.player.lanePos) > 0.45) continue;
     const obsY = car.y * state.height;
     if (Math.abs(obsY - carY) < carHalf * 1.1) {
       if (state.player.boost > 0) {
@@ -419,7 +480,7 @@ function checkCollisions() {
 
   const remaining: Item[] = [];
   for (const item of state.items) {
-    if (item.lane !== state.player.lane) {
+    if (Math.abs(item.lane - state.player.lanePos) > 0.45) {
       remaining.push(item);
       continue;
     }
@@ -445,8 +506,9 @@ function update(dt: number) {
   state.trafficTimer += dt * 1000;
   state.bonusTimer += dt * 1000;
   state.malusTimer += dt * 1000;
-  handleInput();
+  handleInput(dt);
   handleBoost(dt);
+  updateLanePosition(dt);
   updateEntities(dt, speedFactor);
   updateEffects(dt);
   if (state.trafficTimer >= state.trafficSpawnMs) {
@@ -484,7 +546,8 @@ function render() {
   }
   ctx.setLineDash([]);
 
-  const carX = roadX + state.player.lane * state.laneWidth + state.laneWidth / 2 - state.laneWidth * 0.25;
+  const carX =
+    roadX + state.player.lanePos * state.laneWidth + state.laneWidth / 2 - state.laneWidth * 0.25;
   const carY = state.height * state.player.y - state.laneWidth * 0.5;
   drawSprite(carSprite, carX, carY, state.laneWidth * 0.5, state.laneWidth * 0.9);
 

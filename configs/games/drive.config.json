@@ -24,16 +24,16 @@
     "trafficSpeed": 240,
     "trafficSpeedVariance": 50,
     "boostDurationMs": 2600,
-    "boostCooldownMs": 4200,
-    "pickupSpawnMs": 2100,
-    "bonusSpawnMs": 2100,
-    "malusSpawnMs": 2500,
-    "bonusInvincibleMs": 2200,
-    "bonusSlowMs": 2400,
+    "boostCooldownMs": 3600,
+    "pickupSpawnMs": 1900,
+    "bonusSpawnMs": 1900,
+    "malusSpawnMs": 3000,
+    "bonusInvincibleMs": 2400,
+    "bonusSlowMs": 2600,
     "slowMultiplier": 0.65,
-    "malusSpeedMs": 2600,
-    "speedUpMultiplier": 1.35,
-    "malusInvertMs": 2600
+    "malusSpeedMs": 2200,
+    "speedUpMultiplier": 1.25,
+    "malusInvertMs": 2200
   },
   "input": {
     "keys": {
