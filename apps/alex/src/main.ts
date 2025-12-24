@@ -158,6 +158,7 @@ const messageParagraphs = [
   "D’ailleurs, petit rappel utile : se niquer une cheville sur un micro-rebord de rien du tout, c’est pas un bug du décor, c’est un indice.",
   "Donc si tu as joué sur ton téléphone, j’espère sincèrement que tu as levé les yeux de temps en temps. Ce serait dommage de rajouter une deuxième cheville au tableau.",
   "Mais revenons au sujet : cet achievement. Pas une surprise, plutôt une étape inévitable. Comme les lunettes qui apparaissent soudainement “juste pour lire”.",
+  "Tu n'y es pas encore, mais ça ne saurait tarder ! Regarde Elo....(Ouais elle prend sa balle perdue aussi !!).",
   "Vu que tu adores les mots gentils, les paillettes et tout ce genre de trucs, je voulais te dire que tu es une personne remarquable. Toujours le sourire, attentionnée, drôle et intelligente.",
   "Mais en vrai je sais très bien que là, tu es en train de vomir intérieurement.",
   "Du coup je vais rééquilibrer tout ça : va te faire foutre amicalement :D",
@@ -171,7 +172,7 @@ const badges = [
 ];
 
 const psLine =
-  "PS : si on te demande ton cadeau, dis que c’est cet achievement. À ce stade, c’est plus durable qu’un corps en parfait état.";
+  "PS : si on te demande ton cadeau, dis que c’est cet achievement. À ce stade, c’est plus durable qu’un corps en parfait état. :P";
 
   const backLink = withBasePath("/", basePath);
 
@@ -244,17 +245,19 @@ const psLine =
             <div class="signature">— La dream team</div>
           </article>
 
-          <article class="card">
-            <div class="card-head">
-              <span class="pill">Dernier mot</span>
-              <h2>Merci, vraiment</h2>
-            </div>
-            <p>
-              Même si on te chambre un peu, le fond est là : merci pour tout.
-            </p>
-            <div class="signature">— Signé : la DREAM TEAM Wallah !</div>
-          </article>
-        </section>
+<article class="card">
+  <div class="card-head">
+    <span class="pill">Dernier mot</span>
+    <h2>Merci, vraiment</h2>
+  </div>
+  <p>
+    On te chambre, on te pique, on exagère… mais le fond est simple :
+    merci pour tout ce que tu fais, pour ce que tu donnes, et pour être
+    exactement comme tu es (même quand tu râles).
+  </p>
+  <div class="signature">— Signé : la DREAM TEAM, avec affection (si si)</div>
+</article>
+
 
         <section class="callout">
           <div>
@@ -277,8 +280,8 @@ function startFireworks() {
   const canvas = document.getElementById("fireworks") as HTMLCanvasElement | null;
   if (!canvas) return;
 
-  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (prefersReducedMotion) return;
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const intensity = reducedMotion ? 0.55 : 1;
 
   const context = canvas.getContext("2d");
   if (!context) return;
@@ -311,10 +314,10 @@ function startFireworks() {
   };
 
   const burst = (x: number, y: number, power = 1) => {
-    const count = Math.round(40 * power);
+    const count = Math.round(52 * power * intensity);
     for (let i = 0; i < count; i += 1) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = (Math.random() * 2.2 + 1.8) * power;
+      const speed = (Math.random() * 2.2 + (reducedMotion ? 1.5 : 2.1)) * power;
       const size = Math.random() * 1.6 + 1.2;
       particles.push({
         x,
@@ -322,7 +325,7 @@ function startFireworks() {
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         alpha: 1,
-        decay: 0.012 + Math.random() * 0.016,
+        decay: (0.012 + Math.random() * 0.016) * (reducedMotion ? 1.1 : 1),
         size,
         color: colors[Math.floor(Math.random() * colors.length)],
       });
@@ -334,10 +337,11 @@ function startFireworks() {
   const tick = () => {
     context.clearRect(0, 0, width, height);
     context.globalCompositeOperation = "lighter";
+    const gravity = reducedMotion ? 0.03 : 0.04;
 
     for (let i = particles.length - 1; i >= 0; i -= 1) {
       const particle = particles[i];
-      particle.vy += 0.04;
+      particle.vy += gravity;
       particle.vx *= 0.98;
       particle.vy *= 0.98;
       particle.x += particle.vx;
@@ -375,18 +379,26 @@ function startFireworks() {
 
   const startTime = performance.now();
   const durationMs = 10_000;
-  const schedule = window.setInterval(() => {
+  const minDelay = reducedMotion ? 520 : 300;
+  const maxDelay = reducedMotion ? 780 : 560;
+
+  const scheduleNext = () => {
     const elapsed = performance.now() - startTime;
-    if (elapsed >= durationMs) {
-      window.clearInterval(schedule);
-      return;
-    }
-    const x = width * (0.18 + Math.random() * 0.64);
-    const y = height * (0.2 + Math.random() * 0.5);
-    const power = 0.55 + Math.random() * 0.4;
-    burst(x, y, power);
-    launch();
-  }, 420);
+    if (elapsed >= durationMs) return;
+    const delay = minDelay + Math.random() * (maxDelay - minDelay);
+    window.setTimeout(() => {
+      const x = width * (0.16 + Math.random() * 0.68);
+      const y = height * (0.18 + Math.random() * 0.55);
+      const power = (0.6 + Math.random() * 0.45) * intensity;
+      burst(x, y, power);
+      launch();
+      scheduleNext();
+    }, delay);
+  };
+
+  burst(width * 0.5, height * 0.3, 1.15 * intensity);
+  launch();
+  scheduleNext();
 }
 
 subscribeCloud((state) => {
