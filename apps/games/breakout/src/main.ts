@@ -125,8 +125,8 @@ const mobileControls = createMobileControlManager({
     actions: [{ code: controls.launch, trigger: "shake" }],
   },
   hints: {
-    touch: "Glisse la raquette du doigt, bouton Lancer.",
-    motion: "Secouer pour lancer.",
+    touch: "Tactile : glisse la raquette, bouton Lancer.",
+    motion: "Gyro : secoue pour lancer.",
   },
 });
 
@@ -359,12 +359,13 @@ const loop = createGameLoop({
 function resize() {
   const prevPlay = { ...state.play };
   state.dpr = devicePixelRatio || 1;
-  canvas.width = window.innerWidth * state.dpr;
-  canvas.height = window.innerHeight * state.dpr;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * state.dpr;
+  canvas.height = rect.height * state.dpr;
   canvas.style.width = "100%";
   canvas.style.height = "100%";
-  state.width = canvas.width / state.dpr;
-  state.height = canvas.height / state.dpr;
+  state.width = rect.width;
+  state.height = rect.height;
   layoutPlayfield();
   if (prevPlay.w > 0 && prevPlay.h > 0) {
     const paddleRatio = (state.paddle.x - prevPlay.x) / prevPlay.w;
@@ -1054,6 +1055,11 @@ function renderPowerups() {
 }
 
 function render() {
+  const width = Math.round(canvas.clientWidth);
+  const height = Math.round(canvas.clientHeight);
+  if (width !== Math.round(state.width) || height !== Math.round(state.height)) {
+    resize();
+  }
   ctx.save();
   ctx.scale(state.dpr, state.dpr);
   ctx.clearRect(0, 0, state.width, state.height);

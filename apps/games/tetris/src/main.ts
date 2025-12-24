@@ -128,8 +128,8 @@ const mobileControls = createMobileControlManager({
     actions: [{ code: keys.drop, trigger: "shake" }],
   },
   hints: {
-    touch: "Glisse pour gauche/droite, boutons Rotate/Drop.",
-    motion: "Secouer pour drop.",
+    touch: "Tactile : glisse pour gauche/droite, glisse vers le bas pour descendre, boutons Rotate/Drop.",
+    motion: "Gyro : secoue pour drop.",
   },
 });
 
@@ -197,10 +197,12 @@ canvas.addEventListener("pointerleave", resetTouch);
 const keyLatch: Record<string, boolean> = {};
 
 function resize() {
-  canvas.width = window.innerWidth * devicePixelRatio;
-  canvas.height = window.innerHeight * devicePixelRatio;
-  state.width = canvas.width / devicePixelRatio;
-  state.height = canvas.height / devicePixelRatio;
+  const rect = canvas.getBoundingClientRect();
+  const dpr = devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  state.width = rect.width;
+  state.height = rect.height;
   const maxCellByWidth = Math.floor(state.width / (state.boardWidth + 6));
   const maxCellByHeight = Math.floor(state.height / (state.boardHeight + 2));
   state.cell = clamp(Math.min(maxCellByWidth, maxCellByHeight), 18, 36);
@@ -452,6 +454,11 @@ function update(dt: number) {
 }
 
 function render() {
+  const width = Math.round(canvas.clientWidth);
+  const height = Math.round(canvas.clientHeight);
+  if (width !== Math.round(state.width) || height !== Math.round(state.height)) {
+    resize();
+  }
   ctx.save();
   ctx.scale(devicePixelRatio, devicePixelRatio);
   ctx.clearRect(0, 0, state.width, state.height);

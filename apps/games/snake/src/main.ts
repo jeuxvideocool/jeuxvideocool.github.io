@@ -77,8 +77,8 @@ const mobileControls = createMobileControlManager({
     actions: [{ code: controls.dash, trigger: "shake" }],
   },
   hints: {
-    touch: "Glisse pour diriger, bouton Boost.",
-    motion: "Incliner pour diriger, secouer pour booster.",
+    touch: "Tactile : glisse pour diriger, bouton Boost.",
+    motion: "Gyro : incline pour diriger, secoue pour booster.",
   },
 });
 
@@ -166,12 +166,13 @@ const loop = createGameLoop({
 
 function resize() {
   state.dpr = devicePixelRatio || 1;
-  canvas.width = window.innerWidth * state.dpr;
-  canvas.height = window.innerHeight * state.dpr;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * state.dpr;
+  canvas.height = rect.height * state.dpr;
   canvas.style.width = "100%";
   canvas.style.height = "100%";
-  state.viewWidth = canvas.width / state.dpr;
-  state.viewHeight = canvas.height / state.dpr;
+  state.viewWidth = rect.width;
+  state.viewHeight = rect.height;
   const usable = Math.min(state.viewWidth, state.viewHeight) * 0.88;
   state.cellSize = clamp(Math.floor(usable / state.boardSize), 18, 46);
   const boardPx = state.cellSize * state.boardSize;
@@ -386,6 +387,11 @@ function drawRoundedRect(x: number, y: number, w: number, h: number, r: number) 
 }
 
 function render() {
+  const width = Math.round(canvas.clientWidth);
+  const height = Math.round(canvas.clientHeight);
+  if (width !== Math.round(state.viewWidth) || height !== Math.round(state.viewHeight)) {
+    resize();
+  }
   ctx.save();
   ctx.scale(state.dpr, state.dpr);
   ctx.clearRect(0, 0, state.viewWidth, state.viewHeight);

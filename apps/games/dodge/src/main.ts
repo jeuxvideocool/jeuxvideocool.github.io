@@ -66,8 +66,8 @@ const mobileControls = createMobileControlManager({
     actions: [{ code: controls.dash, trigger: "shake" }],
   },
   hints: {
-    touch: "Glisse pour bouger, bouton Dash.",
-    motion: "Incliner pour bouger, secouer pour dash.",
+    touch: "Tactile : glisse pour bouger, bouton Dash.",
+    motion: "Gyro : incline pour bouger, secoue pour dash.",
   },
 });
 
@@ -101,12 +101,14 @@ const state = {
 };
 
 function resize() {
-  canvas.width = window.innerWidth * devicePixelRatio;
-  canvas.height = window.innerHeight * devicePixelRatio;
+  const rect = canvas.getBoundingClientRect();
+  const dpr = devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
   canvas.style.width = "100%";
   canvas.style.height = "100%";
-  state.width = canvas.width / devicePixelRatio;
-  state.height = canvas.height / devicePixelRatio;
+  state.width = rect.width;
+  state.height = rect.height;
   buildStars();
 }
 
@@ -341,6 +343,11 @@ function update(dt: number) {
 }
 
 function render() {
+  const width = Math.round(canvas.clientWidth);
+  const height = Math.round(canvas.clientHeight);
+  if (width !== Math.round(state.width) || height !== Math.round(state.height)) {
+    resize();
+  }
   ctx.save();
   ctx.scale(devicePixelRatio, devicePixelRatio);
   ctx.clearRect(0, 0, state.width, state.height);

@@ -66,8 +66,8 @@ const mobileControls = createMobileControlManager({
     actions: [{ code: controls.boost, trigger: "tiltForward", mode: "hold", threshold: 16 }],
   },
   hints: {
-    touch: "Glisse ou boutons pour changer de voie, bouton Boost.",
-    motion: "Incliner pour changer de voie, pencher vers l'avant pour booster.",
+    touch: "Tactile : glisse pour changer de voie, bouton Boost.",
+    motion: "Gyro : incline pour changer de voie, penche vers l'avant pour booster.",
   },
 });
 
@@ -200,10 +200,12 @@ function syncLanes() {
 }
 
 function resize() {
-  canvas.width = window.innerWidth * devicePixelRatio;
-  canvas.height = window.innerHeight * devicePixelRatio;
-  state.width = canvas.width / devicePixelRatio;
-  state.height = canvas.height / devicePixelRatio;
+  const rect = canvas.getBoundingClientRect();
+  const dpr = devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  state.width = rect.width;
+  state.height = rect.height;
   state.roadWidth = Math.min(520, state.width * 0.65);
   syncLanes();
 }
@@ -527,6 +529,11 @@ function update(dt: number) {
 }
 
 function render() {
+  const width = Math.round(canvas.clientWidth);
+  const height = Math.round(canvas.clientHeight);
+  if (width !== Math.round(state.width) || height !== Math.round(state.height)) {
+    resize();
+  }
   ctx.save();
   ctx.scale(devicePixelRatio, devicePixelRatio);
   ctx.clearRect(0, 0, state.width, state.height);

@@ -79,8 +79,8 @@ const mobileControls = createMobileControlManager({
     actions: [{ code: controls.attack, trigger: "shake" }],
   },
   hints: {
-    touch: "Glisse pour bouger, bouton Frappe.",
-    motion: "Incliner pour bouger, secouer pour frapper.",
+    touch: "Tactile : glisse pour bouger, bouton Frappe.",
+    motion: "Gyro : incline pour bouger, secoue pour frapper.",
   },
 });
 
@@ -115,10 +115,12 @@ const state = {
 };
 
 function resize() {
-  canvas.width = window.innerWidth * devicePixelRatio;
-  canvas.height = window.innerHeight * devicePixelRatio;
-  state.width = canvas.width / devicePixelRatio;
-  state.height = canvas.height / devicePixelRatio;
+  const rect = canvas.getBoundingClientRect();
+  const dpr = devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  state.width = rect.width;
+  state.height = rect.height;
 }
 resize();
 window.addEventListener("resize", resize);
@@ -430,6 +432,11 @@ function update(dt: number) {
 }
 
 function render() {
+  const width = Math.round(canvas.clientWidth);
+  const height = Math.round(canvas.clientHeight);
+  if (width !== Math.round(state.width) || height !== Math.round(state.height)) {
+    resize();
+  }
   ctx.save();
   ctx.scale(devicePixelRatio, devicePixelRatio);
   ctx.clearRect(0, 0, state.width, state.height);

@@ -121,16 +121,18 @@ const mobileControls = createMobileControlManager({
     ],
   },
   hints: {
-    touch: "Boutons P1 / P2.",
-    motion: "Incliner à gauche/droite pour P1/P2.",
+    touch: "Tactile : boutons P1 / P2.",
+    motion: "Gyro : incline à gauche/droite pour P1 / P2.",
   },
 });
 
 function resize() {
-  canvas.width = window.innerWidth * devicePixelRatio;
-  canvas.height = window.innerHeight * devicePixelRatio;
-  state.width = canvas.width / devicePixelRatio;
-  state.height = canvas.height / devicePixelRatio;
+  const rect = canvas.getBoundingClientRect();
+  const dpr = devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  state.width = rect.width;
+  state.height = rect.height;
 }
 resize();
 window.addEventListener("resize", resize);
@@ -316,6 +318,11 @@ function endGame(winnerLabel: string) {
 }
 
 function render() {
+  const width = Math.round(canvas.clientWidth);
+  const height = Math.round(canvas.clientHeight);
+  if (width !== Math.round(state.width) || height !== Math.round(state.height)) {
+    resize();
+  }
   ctx.save();
   ctx.scale(devicePixelRatio, devicePixelRatio);
   ctx.clearRect(0, 0, state.width, state.height);
