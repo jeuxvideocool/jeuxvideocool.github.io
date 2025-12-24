@@ -314,8 +314,8 @@ function update(dt: number) {
   // Shooting
   const shootKey = controls.shoot;
   const shootingNow = isDownAny(shootKey, controls.altShoot);
-  const cooldown = state.cooldownPaused > 0 ? 0 : state.fireCooldown;
-  const heatBlocked = state.overheat && state.cooldownPaused <= 0;
+  const cooldown = state.fireCooldown;
+  const heatBlocked = state.overheat;
   if (shootingNow && !heatBlocked && state.lastShot > cooldown) {
     state.bullets.push({
       x: state.player.x,
@@ -397,7 +397,7 @@ function update(dt: number) {
     return heart.y < state.height + 30;
   });
 
-  // Boosts movement + pickup (pause cooldown)
+  // Boosts movement + pickup (pause heat gain)
   state.boosts = state.boosts.filter((boost) => {
     boost.y += boost.vy;
     const dx = boost.x - state.player.x;
@@ -550,7 +550,7 @@ function renderHUD() {
     <div class="pill">Vies ${state.lives}/${state.maxLives}</div>
     ${
       state.cooldownPaused > 0
-        ? `<div class="pill">Cooldown off ${state.cooldownPaused.toFixed(1)}s</div>`
+        ? `<div class="pill">Chaleur figée ${state.cooldownPaused.toFixed(1)}s</div>`
         : ""
     }
     <div class="pill ${state.overheat ? "danger" : ""}">Chaleur ${heatPercent}%${state.overheat ? " (Overheat)" : ""}</div>
