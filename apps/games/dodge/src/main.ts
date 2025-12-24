@@ -54,8 +54,8 @@ const mobileControls = createMobileControlManager({
       actionA: controls.dash,
       actionALabel: "Dash",
     },
-    showPad: true,
-    gestureEnabled: false,
+    showPad: false,
+    gestureEnabled: true,
   },
   motion: {
     input,
@@ -66,7 +66,7 @@ const mobileControls = createMobileControlManager({
     actions: [{ code: controls.dash, trigger: "shake" }],
   },
   hints: {
-    touch: "Flèches pour bouger, bouton Dash.",
+    touch: "Glisse pour bouger, bouton Dash.",
     motion: "Incliner pour bouger, secouer pour dash.",
   },
 });

@@ -67,8 +67,8 @@ const mobileControls = createMobileControlManager({
       actionA: controls.attack,
       actionALabel: "Frappe",
     },
-    showPad: true,
-    gestureEnabled: false,
+    showPad: false,
+    gestureEnabled: true,
   },
   motion: {
     input,
@@ -79,7 +79,7 @@ const mobileControls = createMobileControlManager({
     actions: [{ code: controls.attack, trigger: "shake" }],
   },
   hints: {
-    touch: "Flèches pour bouger, bouton Frappe.",
+    touch: "Glisse pour bouger, bouton Frappe.",
     motion: "Incliner pour bouger, secouer pour frapper.",
   },
 });

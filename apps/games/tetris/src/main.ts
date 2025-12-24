@@ -115,34 +115,84 @@ const mobileControls = createMobileControlManager({
   input,
   touch: {
     mapping: {
-      left: keys.left,
-      right: keys.right,
-      down: keys.down,
-      up: keys.rotate,
       actionA: keys.rotate,
       actionALabel: "Rotate",
       actionB: keys.drop,
       actionBLabel: "Drop",
     },
-    showPad: true,
+    showPad: false,
     gestureEnabled: false,
   },
   motion: {
     input,
-    axis: {
-      x: { negative: keys.left, positive: keys.right },
-      y: { positive: keys.down },
-    },
-    actions: [
-      { code: keys.rotate, trigger: "tiltBack" },
-      { code: keys.drop, trigger: "shake" },
-    ],
+    actions: [{ code: keys.drop, trigger: "shake" }],
   },
   hints: {
-    touch: "Flèches pour déplacer, boutons Rotate/Drop.",
-    motion: "Incliner pour déplacer, pencher vers l'avant pour descendre, basculer vers l'arrière pour tourner, secouer pour drop.",
+    touch: "Glisse pour gauche/droite, boutons Rotate/Drop.",
+    motion: "Secouer pour drop.",
   },
 });
+
+const touchInput = {
+  active: false,
+  x: 0,
+  y: 0,
+  startX: 0,
+  startY: 0,
+  moveCooldown: 0,
+  softDrop: false,
+};
+
+function getGridOffsets() {
+  const { gridOffsetX, gridOffsetY } = getGridOffsets();
+  return { gridOffsetX, gridOffsetY };
+}
+
+function getPointerPos(event: PointerEvent) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = state.width / rect.width;
+  const scaleY = state.height / rect.height;
+  return {
+    x: (event.clientX - rect.left) * scaleX,
+    y: (event.clientY - rect.top) * scaleY,
+  };
+}
+
+canvas.style.touchAction = "none";
+canvas.addEventListener("pointerdown", (event) => {
+  if (!mobileControls.isMobile) return;
+  const pos = getPointerPos(event);
+  const { gridOffsetX, gridOffsetY } = getGridOffsets();
+  const gridW = state.boardWidth * state.cell;
+  const gridH = state.boardHeight * state.cell;
+  const insideGrid =
+    pos.x >= gridOffsetX &&
+    pos.x <= gridOffsetX + gridW &&
+    pos.y >= gridOffsetY &&
+    pos.y <= gridOffsetY + gridH;
+  if (!insideGrid) return;
+  touchInput.active = true;
+  touchInput.x = pos.x;
+  touchInput.y = pos.y;
+  touchInput.startX = pos.x;
+  touchInput.startY = pos.y;
+  touchInput.softDrop = false;
+});
+canvas.addEventListener("pointermove", (event) => {
+  if (!touchInput.active) return;
+  const pos = getPointerPos(event);
+  touchInput.x = pos.x;
+  touchInput.y = pos.y;
+  touchInput.softDrop = touchInput.y - touchInput.startY > state.cell * 0.6;
+});
+const resetTouch = () => {
+  touchInput.active = false;
+  touchInput.softDrop = false;
+  touchInput.moveCooldown = 0;
+};
+canvas.addEventListener("pointerup", resetTouch);
+canvas.addEventListener("pointercancel", resetTouch);
+canvas.addEventListener("pointerleave", resetTouch);
 
 const keyLatch: Record<string, boolean> = {};
 
@@ -325,6 +375,9 @@ function startGame() {
   state.dropTimer = 0;
   state.current = null;
   state.next = randomPiece();
+  touchInput.active = false;
+  touchInput.softDrop = false;
+  touchInput.moveCooldown = 0;
   blankBoard();
   spawnPiece();
   overlay.style.display = "none";
@@ -353,12 +406,32 @@ function endGame(win: boolean) {
   );
 }
 
+function getTouchMove() {
+  if (!touchInput.active || !state.current) return 0;
+  const { gridOffsetX } = getGridOffsets();
+  const pieceWidth = state.current.matrix[0].length;
+  const centerX = gridOffsetX + (state.current.x + pieceWidth / 2) * state.cell;
+  const threshold = state.cell * 0.35;
+  if (touchInput.x > centerX + threshold) return 1;
+  if (touchInput.x < centerX - threshold) return -1;
+  return 0;
+}
+
 function handleInput(dt: number) {
-  const left = input.isDown(keys.left);
-  const right = input.isDown(keys.right);
+  if (touchInput.moveCooldown > 0) {
+    touchInput.moveCooldown = Math.max(0, touchInput.moveCooldown - dt);
+  }
+  const touchMove = getTouchMove();
+  if (touchMove !== 0 && touchInput.moveCooldown === 0) {
+    movePiece(touchMove);
+    touchInput.moveCooldown = 0.12;
+  }
+
+  const left = !touchInput.active && input.isDown(keys.left);
+  const right = !touchInput.active && input.isDown(keys.right);
   const rotateKey = input.isDown(keys.rotate);
   const dropKey = input.isDown(keys.drop);
-  const downKey = input.isDown(keys.down);
+  const downKey = input.isDown(keys.down) || touchInput.softDrop;
 
   if (left && !keyLatch.left) movePiece(-1);
   if (right && !keyLatch.right) movePiece(1);

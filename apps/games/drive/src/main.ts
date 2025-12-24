@@ -56,7 +56,7 @@ const mobileControls = createMobileControlManager({
       actionALabel: "Boost",
     },
     showPad: true,
-    gestureEnabled: false,
+    gestureEnabled: true,
   },
   motion: {
     input,
@@ -66,7 +66,7 @@ const mobileControls = createMobileControlManager({
     actions: [{ code: controls.boost, trigger: "tiltForward", mode: "hold", threshold: 16 }],
   },
   hints: {
-    touch: "Flèches pour changer de voie, bouton Boost.",
+    touch: "Glisse ou boutons pour changer de voie, bouton Boost.",
     motion: "Incliner pour changer de voie, pencher vers l'avant pour booster.",
   },
 });

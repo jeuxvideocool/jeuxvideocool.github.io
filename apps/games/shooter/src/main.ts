@@ -68,8 +68,8 @@ const mobileControls = createMobileControlManager({
       actionA: controls.shoot,
       actionALabel: "Tir",
     },
-    showPad: true,
-    gestureEnabled: false,
+    showPad: false,
+    gestureEnabled: true,
   },
   motion: {
     input,
@@ -79,7 +79,7 @@ const mobileControls = createMobileControlManager({
     actions: [{ code: controls.shoot, trigger: "tiltForward", mode: "hold", threshold: 14 }],
   },
   hints: {
-    touch: "Flèches pour bouger, bouton Tir.",
+    touch: "Glisse pour bouger, bouton Tir.",
     motion: "Incliner pour bouger, pencher vers l'avant pour tirer.",
   },
 });

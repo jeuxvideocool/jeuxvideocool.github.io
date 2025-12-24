@@ -65,8 +65,8 @@ const mobileControls = createMobileControlManager({
       actionA: controls.dash,
       actionALabel: "Boost",
     },
-    showPad: true,
-    gestureEnabled: false,
+    showPad: false,
+    gestureEnabled: true,
   },
   motion: {
     input,
@@ -77,7 +77,7 @@ const mobileControls = createMobileControlManager({
     actions: [{ code: controls.dash, trigger: "shake" }],
   },
   hints: {
-    touch: "Flèches pour diriger, bouton Boost.",
+    touch: "Glisse pour diriger, bouton Boost.",
     motion: "Incliner pour diriger, secouer pour booster.",
   },
 });

@@ -114,26 +114,76 @@ const mobileControls = createMobileControlManager({
   input,
   touch: {
     mapping: {
-      left: controls.left,
-      right: controls.right,
       actionA: controls.launch,
       actionALabel: "Lancer",
     },
-    showPad: true,
+    showPad: false,
     gestureEnabled: false,
   },
   motion: {
     input,
-    axis: {
-      x: { negative: controls.left, positive: controls.right },
-    },
     actions: [{ code: controls.launch, trigger: "shake" }],
   },
   hints: {
-    touch: "Flèches pour déplacer, bouton Lancer.",
-    motion: "Incliner pour déplacer, secouer pour lancer.",
+    touch: "Glisse la raquette du doigt, bouton Lancer.",
+    motion: "Secouer pour lancer.",
   },
 });
+
+const touchPaddle = {
+  active: false,
+  dragging: false,
+  x: 0,
+  y: 0,
+  offsetX: 0,
+};
+
+function getPointerPos(event: PointerEvent) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = state.width / rect.width;
+  const scaleY = state.height / rect.height;
+  return {
+    x: (event.clientX - rect.left) * scaleX,
+    y: (event.clientY - rect.top) * scaleY,
+  };
+}
+
+function isOnPaddle(pos: { x: number; y: number }) {
+  const margin = Math.max(12, state.paddle.h * 1.8);
+  const withinX = pos.x >= state.paddle.x - 20 && pos.x <= state.paddle.x + state.paddle.w + 20;
+  const withinY = pos.y >= state.paddle.y - margin && pos.y <= state.paddle.y + state.paddle.h + margin;
+  return withinX && withinY;
+}
+
+canvas.style.touchAction = "none";
+canvas.addEventListener("pointerdown", (event) => {
+  if (!mobileControls.isMobile) return;
+  const pos = getPointerPos(event);
+  touchPaddle.active = true;
+  touchPaddle.x = pos.x;
+  touchPaddle.y = pos.y;
+  if (isOnPaddle(pos)) {
+    touchPaddle.dragging = true;
+    touchPaddle.offsetX = pos.x - state.paddle.x;
+  }
+});
+canvas.addEventListener("pointermove", (event) => {
+  if (!touchPaddle.active) return;
+  const pos = getPointerPos(event);
+  touchPaddle.x = pos.x;
+  touchPaddle.y = pos.y;
+  if (!touchPaddle.dragging && isOnPaddle(pos)) {
+    touchPaddle.dragging = true;
+    touchPaddle.offsetX = pos.x - state.paddle.x;
+  }
+});
+const resetTouch = () => {
+  touchPaddle.active = false;
+  touchPaddle.dragging = false;
+};
+canvas.addEventListener("pointerup", resetTouch);
+canvas.addEventListener("pointercancel", resetTouch);
+canvas.addEventListener("pointerleave", resetTouch);
 
 const baseRows = config?.difficultyParams.rows ?? 6;
 const baseCols = config?.difficultyParams.cols ?? 10;
@@ -731,6 +781,8 @@ function startGame() {
   state.running = true;
   state.score = 0;
   state.flash = 0;
+  touchPaddle.active = false;
+  touchPaddle.dragging = false;
   state.powerups = [];
   state.paddle.x = state.play.x + (state.play.w - state.paddle.w) / 2;
   resetBall();
@@ -868,6 +920,12 @@ function update(dt: number) {
   const move = state.invertTimer > 0 ? -moveRaw : moveRaw;
   if (move !== 0) {
     state.paddle.x += move * state.paddle.speed * state.paddleSpeedMultiplier * dt;
+  }
+  if (mobileControls.isMobile && touchPaddle.dragging) {
+    const rawTarget = touchPaddle.x - touchPaddle.offsetX;
+    const invertedTarget = state.play.x + state.play.w - (rawTarget - state.play.x) - state.paddle.w;
+    const target = state.invertTimer > 0 ? invertedTarget : rawTarget;
+    state.paddle.x = target;
   }
   state.paddle.x = clamp(state.paddle.x, state.play.x, state.play.x + state.play.w - state.paddle.w);
 
