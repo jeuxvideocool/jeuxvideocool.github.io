@@ -151,21 +151,27 @@ function renderSecretPage() {
     year: "numeric",
   });
 
-  const messageParagraphs = [
-    "Alors ça y est, tu as atteint l'expérience requise !!!",
-    "Ça fait de toi une vieille félicitation :D",
-    "Bon, la vérité, tu as travaillé dur pour ça... enfin travaillé, tu as surtout joué, quoi.",
-    "Mais bon, il fallait bien que tu arrives à cet achievement — à vrai dire, c'est plutôt ça, ton cadeau !",
-    "Comme je sais que tu adores les petits mots gentils, les compliments et les paillettes (je t'entends vomir d'ici :D).",
-    "Joyeux Anninoël en retard : tu n'as eu accès au site que le 24 au soir, la classe :D",
-    "Bref, t'es une machine… mais une machine à blagues, surtout.",
-    "Tu peux ressortir la panoplie : claquettes, barbecue, et ego XXL, c'est mérité.",
-    "En tout cas, merci pour tout ce que tu es !",
-  ];
+const messageParagraphs = [
+  "Bon. C’est officiel. Tu as atteint le niveau requis.",
+  "Ce qui signifie surtout une chose : oui, tu es vieille. Pas symboliquement. Administrativement.",
+  "On pourrait parler d’expérience, de maturité, de sagesse… mais soyons honnêtes : c’est surtout l’accumulation des années qui a fini par faire le boulot.",
+  "D’ailleurs, petit rappel utile : se niquer une cheville sur un micro-rebord de rien du tout, c’est pas un bug du décor, c’est un indice.",
+  "Donc si tu as joué sur ton téléphone, j’espère sincèrement que tu as levé les yeux de temps en temps. Ce serait dommage de rajouter une deuxième cheville au tableau.",
+  "Mais revenons au sujet : cet achievement. Pas une surprise, plutôt une étape inévitable. Comme les lunettes qui apparaissent soudainement “juste pour lire”.",
+  "Vu que tu adores les mots gentils, les paillettes et tout ce genre de trucs, je voulais te dire que tu es une personne remarquable. Toujours le sourire, attentionnée, drôle et intelligente.",
+  "Mais en vrai je sais très bien que là, tu es en train de vomir intérieurement.",
+  "Du coup je vais rééquilibrer tout ça : va te faire foutre amicalement :D",
+  "Joyeux Anninoël : cadeau d’anniversaire ET de Noël, accès au site le 24 au soir oblige.",
+  "Bref, respect quand même. Et maintenant… comme tu veux.",
+];
 
-  const badges = ["Accès débloqué", "Achievement validé", "Anninoël tardif"];
-  const psLine =
-    "PS : si on te demande ton cadeau, dis que c'est l'achievement. C'est déjà pas mal.";
+const badges = [
+  "Accès débloqué (avec assistance)",
+  "Achievement validé malgré l’âge",
+];
+
+const psLine =
+  "PS : si on te demande ton cadeau, dis que c’est cet achievement. À ce stade, c’est plus durable qu’un corps en parfait état.";
 
   const backLink = withBasePath("/", basePath);
 
@@ -183,7 +189,7 @@ function renderSecretPage() {
         <nav class="topbar">
           <div class="topbar-left">
             <span class="tag">Accès débloqué</span>
-            <span class="topbar-title">Alexiane · Message perso</span>
+            <span class="topbar-title">Alexiane · Un joyeux Anni-noël</span>
           </div>
         </nav>
 
@@ -194,7 +200,7 @@ function renderSecretPage() {
               ${avatar} ${displayName}, objectif atteint.
             </h1>
             <p class="lead">
-              Tu as atteint l'expérience requise. Voici le message qui va avec, en mode taquin.
+              Tu as atteint l'expérience requise. Voici le message qui va avec !
             </p>
             <div class="hero-actions">
               <a class="btn primary" href="${backLink}">Retour au hub</a>
@@ -202,7 +208,6 @@ function renderSecretPage() {
             <div class="chips">
               <span>XP ${xpLabel}</span>
               <span>Achievement validé</span>
-              <span>Accès tardif</span>
             </div>
           </div>
           <aside class="hero-panel">
@@ -247,7 +252,7 @@ function renderSecretPage() {
             <p>
               Même si on te chambre un peu, le fond est là : merci pour tout.
             </p>
-            <div class="signature">— Signé : ceux qui tiennent la manette</div>
+            <div class="signature">— Signé : la DREAM TEAM Wallah !</div>
           </article>
         </section>
 
@@ -306,11 +311,11 @@ function startFireworks() {
   };
 
   const burst = (x: number, y: number, power = 1) => {
-    const count = Math.round(60 * power);
+    const count = Math.round(40 * power);
     for (let i = 0; i < count; i += 1) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = (Math.random() * 3 + 2.2) * power;
-      const size = Math.random() * 2 + 1.4;
+      const speed = (Math.random() * 2.2 + 1.8) * power;
+      const size = Math.random() * 1.6 + 1.2;
       particles.push({
         x,
         y,
@@ -368,20 +373,20 @@ function startFireworks() {
   resize();
   window.addEventListener("resize", resize);
 
-  const sequence = [
-    { delay: 0, x: 0.2, y: 0.32, power: 1.2 },
-    { delay: 180, x: 0.5, y: 0.22, power: 1.4 },
-    { delay: 360, x: 0.8, y: 0.3, power: 1.2 },
-    { delay: 700, x: 0.35, y: 0.45, power: 1.05 },
-    { delay: 920, x: 0.68, y: 0.4, power: 1.15 },
-  ];
-
-  sequence.forEach((shot) => {
-    window.setTimeout(() => {
-      burst(width * shot.x, height * shot.y, shot.power);
-      launch();
-    }, shot.delay);
-  });
+  const startTime = performance.now();
+  const durationMs = 10_000;
+  const schedule = window.setInterval(() => {
+    const elapsed = performance.now() - startTime;
+    if (elapsed >= durationMs) {
+      window.clearInterval(schedule);
+      return;
+    }
+    const x = width * (0.18 + Math.random() * 0.64);
+    const y = height * (0.2 + Math.random() * 0.5);
+    const power = 0.55 + Math.random() * 0.4;
+    burst(x, y, power);
+    launch();
+  }, 420);
 }
 
 subscribeCloud((state) => {
