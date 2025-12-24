@@ -152,24 +152,20 @@ function renderSecretPage() {
   });
 
   const messageParagraphs = [
-    "Alors ça y est, tu as atteint l'expérience requise !",
-    "Ça fait de toi une vraie fierté :D",
+    "Alors ça y est, tu as atteint l'expérience requise !!!",
+    "Ça fait de toi une vieille félicitation :D",
     "Bon, la vérité, tu as travaillé dur pour ça... enfin travaillé, tu as surtout joué, quoi.",
     "Mais bon, il fallait bien que tu arrives à cet achievement — à vrai dire, c'est plutôt ça, ton cadeau !",
     "Comme je sais que tu adores les petits mots gentils, les compliments et les paillettes (je t'entends vomir d'ici :D).",
+    "Joyeux Anninoël en retard : tu n'as eu accès au site que le 24 au soir, la classe :D",
+    "Bref, t'es une machine… mais une machine à blagues, surtout.",
+    "Tu peux ressortir la panoplie : claquettes, barbecue, et ego XXL, c'est mérité.",
     "En tout cas, merci pour tout ce que tu es !",
-  ];
-
-  const recap = [
-    `XP requise : ${minXpLabel}`,
-    "Achievement : validé",
-    "Accès : débloqué",
-    "Paillettes : minimisées",
   ];
 
   const badges = ["Accès débloqué", "Achievement validé", "Anninoël tardif"];
   const psLine =
-    "Joyeux Anninoël — sûrement en retard : tu n'as eu accès au site que le 24 au soir :D";
+    "PS : si on te demande ton cadeau, dis que c'est l'achievement. C'est déjà pas mal.";
 
   const backLink = withBasePath("/", basePath);
 
@@ -189,10 +185,6 @@ function renderSecretPage() {
             <span class="tag">Accès débloqué</span>
             <span class="topbar-title">Alexiane · Message perso</span>
           </div>
-          <div class="topbar-right">
-            <span>ID achievement</span>
-            <strong>${ALEX_SECRET.achievementId}</strong>
-          </div>
         </nav>
 
         <header class="hero">
@@ -202,7 +194,7 @@ function renderSecretPage() {
               ${avatar} ${displayName}, objectif atteint.
             </h1>
             <p class="lead">
-              Tu as atteint l'expérience requise. Voici le message qui va avec, sans chichi.
+              Tu as atteint l'expérience requise. Voici le message qui va avec, en mode taquin.
             </p>
             <div class="hero-actions">
               <a class="btn primary" href="${backLink}">Retour au hub</a>
@@ -244,17 +236,7 @@ function renderSecretPage() {
             <div class="message">
               ${messageParagraphs.map((line) => `<p>${line}</p>`).join("")}
             </div>
-            <div class="signature">— L'équipe (sans paillettes)</div>
-          </article>
-
-          <article class="card">
-            <div class="card-head">
-              <span class="pill">Récap</span>
-              <h2>Ce qui est validé</h2>
-            </div>
-            <ul>
-              ${recap.map((item) => `<li>${item}</li>`).join("")}
-            </ul>
+            <div class="signature">— La dream team</div>
           </article>
 
           <article class="card">
@@ -263,7 +245,7 @@ function renderSecretPage() {
               <h2>Merci, vraiment</h2>
             </div>
             <p>
-              Même si c'est du second degré partout, le fond est là : merci pour tout.
+              Même si on te chambre un peu, le fond est là : merci pour tout.
             </p>
             <div class="signature">— Signé : ceux qui tiennent la manette</div>
           </article>
