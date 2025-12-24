@@ -12,14 +12,14 @@
   "uiText": {
     "title": "RHLife",
     "shortDescription": "Choix RH, couts humains, decisions a froid.",
-    "help": "Tu incarnes une RH intermediaire coincee entre objectifs, conformite et terrain. Chaque decision modifie des jauges visibles et internes. Rien n'est gratuit.",
+    "help": "Tu incarnes une RH intermediaire coincee entre objectifs, conformite et terrain. Chaque decision modifie des jauges visibles et internes. Rien n'est gratuit. Pour gagner, decide de te mettre a ton compte. Une run dure environ 10 minutes.",
     "controls": ["Clique sur un choix", "1-4 pour selectionner"]
   },
   "difficultyParams": {
     "startingGauge": 50,
     "minGauge": 0,
     "maxGauge": 100,
-    "scenarioCount": 4,
+    "scenarioCount": 10,
     "deferredRevealDelay": 1
   },
   "input": {

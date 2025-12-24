@@ -89,24 +89,8 @@ const gaugeMap = new Map(gauges.map((gauge) => [gauge.id, gauge]));
 const defaultGauge = config?.difficultyParams.startingGauge ?? 50;
 const minGauge = config?.difficultyParams.minGauge ?? 0;
 const maxGauge = config?.difficultyParams.maxGauge ?? 100;
-const scenarioArt: Record<string, { src: string; alt: string }> = {
-  "intro-barometre": {
-    src: new URL("../assets/scenario-intro.svg", import.meta.url).href,
-    alt: "Tableau de barometre avec indicateurs instables.",
-  },
-  "mobilite-agile": {
-    src: new URL("../assets/scenario-mobilite.svg", import.meta.url).href,
-    alt: "Valise et fleches de mobilite interne.",
-  },
-  calibration: {
-    src: new URL("../assets/scenario-calibration.svg", import.meta.url).href,
-    alt: "Grille de performance avec classement et croix rouges.",
-  },
-  "crise-publique": {
-    src: new URL("../assets/scenario-crise.svg", import.meta.url).href,
-    alt: "Megaphone et memo de crise.",
-  },
-};
+const WIN_CHOICE_ID = "go-independent";
+const WIN_ENDING_ID = "independent";
 
 if (theme) {
   const root = document.documentElement.style;
@@ -145,6 +129,7 @@ const state = {
   deferredNow: [] as DeferredEvent[],
   activeResult: null as ChoiceResult | null,
   runStarted: 0,
+  wentSolo: false,
 };
 
 function createInitialGauges(): Record<string, number> {
@@ -205,6 +190,9 @@ function computeScore() {
 }
 
 function pickEnding(): Ending {
+  if (state.wentSolo) {
+    return endings.find((ending) => ending.id === WIN_ENDING_ID) || endings[endings.length - 1];
+  }
   const match = endings.find((ending) => {
     if (ending.min) {
       for (const [id, min] of Object.entries(ending.min)) {
@@ -233,6 +221,7 @@ function startGame() {
   state.deferredNow = [];
   state.activeResult = null;
   state.runStarted = Date.now();
+  state.wentSolo = false;
   emitEvent({ type: "SESSION_START", gameId: GAME_ID });
   renderScenario();
 }
@@ -244,6 +233,9 @@ function handleChoice(choiceIndex: number) {
   if (!choice) return;
   applyEffects(choice.immediateEffects);
   scheduleDeferred(choice, scenario.id);
+  if (choice.id === WIN_CHOICE_ID) {
+    state.wentSolo = true;
+  }
   state.activeResult = {
     scenarioId: scenario.id,
     choice,
@@ -285,7 +277,7 @@ function finishGame() {
     payload: { endingId: ending.id, score },
   });
   emitEvent({
-    type: "SESSION_WIN",
+    type: ending.id === WIN_ENDING_ID ? "SESSION_WIN" : "SESSION_FAIL",
     gameId: GAME_ID,
     payload: { endingId: ending.id, score },
   });
@@ -308,10 +300,6 @@ function renderScenario() {
   const visibleGauges = gauges.filter((gauge) => gauge.visible);
   const hiddenGauges = gauges.filter((gauge) => !gauge.visible);
   const deferredMarkup = renderDeferredNotices(state.deferredNow);
-  const art = scenarioArt[scenario.id];
-  const artMarkup = art
-    ? `<div class="rh-illustration"><img src="${art.src}" alt="${art.alt}" /></div>`
-    : "";
   const resultMarkup = state.activeResult ? renderResult(state.activeResult) : "";
   const choicesMarkup = state.activeResult
     ? ""
@@ -346,7 +334,6 @@ function renderScenario() {
       </section>
       <section class="rh-panel">
         ${deferredMarkup}
-        ${artMarkup}
         <h2>Contexte narratif</h2>
         <div class="rh-context">
           ${renderContextItem("Mail", scenario.context.mail)}
@@ -371,8 +358,8 @@ function renderGauge(gauge: GaugeConfig) {
   return `
     <div class="rh-gauge ${tone}">
       <div class="rh-gauge-head">
-        <span>${gauge.label}</span>
-        <strong>${value}</strong>
+        <span class="rh-gauge-label">${gauge.label}</span>
+        <strong class="rh-gauge-value">${value}</strong>
       </div>
       <div class="rh-gauge-bar"><span style="width: ${percent}%"></span></div>
     </div>
