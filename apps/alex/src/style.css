@@ -489,6 +489,15 @@ a {
   line-height: 1.6;
 }
 
+.message {
+  display: grid;
+  gap: 12px;
+}
+
+.message p {
+  margin: 0;
+}
+
 .card ul {
   list-style: none;
   padding: 0;

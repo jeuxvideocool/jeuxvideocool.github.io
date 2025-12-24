@@ -10,8 +10,6 @@ let authChecked = false;
 let currentView: "checking" | "gate" | "denied" | "secret" | null = null;
 let lastDeniedMessage = "";
 
-const pick = <T,>(items: T[]) => items[Math.floor(Math.random() * items.length)];
-
 function renderGate() {
   app.innerHTML = `
     <div class="page">
@@ -153,32 +151,25 @@ function renderSecretPage() {
     year: "numeric",
   });
 
-  const heroLines = [
-    "Tu viens de passer en mode prestige : plus de style, zéro filtre.",
-    "On a tenté de faire sobre. Le code a répondu : « Alexiane, impossible ».",
-    "C'est la page secrète qui dit haut et fort que tu as le swag intégré.",
+  const messageParagraphs = [
+    "Alors ça y est, tu as atteint l'expérience requise !",
+    "Ça fait de toi une vraie fierté :D",
+    "Bon, la vérité, tu as travaillé dur pour ça... enfin travaillé, tu as surtout joué, quoi.",
+    "Mais bon, il fallait bien que tu arrives à cet achievement — à vrai dire, c'est plutôt ça, ton cadeau !",
+    "Comme je sais que tu adores les petits mots gentils, les compliments et les paillettes (je t'entends vomir d'ici :D).",
+    "En tout cas, merci pour tout ce que tu es !",
   ];
 
-  const committeeLines = [
-    "Vote unanime : garder Alexiane au sommet, ajouter une dose de fun et signer tout de suite.",
-    "Après examen, on confirme : niveau charme 9000, option premium activée.",
-    "Résultat du scan : rareté maximale, humour calibré, classe automatique.",
+  const recap = [
+    `XP requise : ${minXpLabel}`,
+    "Achievement : validé",
+    "Accès : débloqué",
+    "Paillettes : minimisées",
   ];
 
-  const psLines = [
-    "Si quelqu'un demande comment tu as débloqué ça, réponds « secret de fabrication ».",
-    "Tu peux revenir ici quand tu veux, c'est ton lounge privé.",
-    "Attention : cette page peut provoquer des sourires incontrôlables.",
-  ];
-
-  const checklist = [
-    "Sourire naturel : activé",
-    "Style : premium",
-    "Vibes : stables",
-    "Punchlines : prêtes",
-  ];
-
-  const badges = ["Édition 1/1", "Validé par le comité", "Premium certifié"];
+  const badges = ["Accès débloqué", "Achievement validé", "Anninoël tardif"];
+  const psLine =
+    "Joyeux Anninoël — sûrement en retard : tu n'as eu accès au site que le 24 au soir :D";
 
   const backLink = withBasePath("/", basePath);
 
@@ -195,46 +186,46 @@ function renderSecretPage() {
       <main class="shell">
         <nav class="topbar">
           <div class="topbar-left">
-            <span class="tag">Achievement exclusif</span>
-            <span class="topbar-title">Alexiane · Édition sur-mesure</span>
+            <span class="tag">Accès débloqué</span>
+            <span class="topbar-title">Alexiane · Message perso</span>
           </div>
           <div class="topbar-right">
-            <span>ID secret</span>
+            <span>ID achievement</span>
             <strong>${ALEX_SECRET.achievementId}</strong>
           </div>
         </nav>
 
         <header class="hero">
           <div class="hero-content">
-            <p class="overline">Accès validé · ${minXpLabel} XP</p>
+            <p class="overline">Niveau requis atteint · ${minXpLabel} XP</p>
             <h1>
-              ${avatar} ${displayName}, tu as débloqué la version <span>Prestige</span>.
+              ${avatar} ${displayName}, objectif atteint.
             </h1>
             <p class="lead">
-              ${pick(heroLines)} Une page pensée pour une seule personne : toi.
+              Tu as atteint l'expérience requise. Voici le message qui va avec, sans chichi.
             </p>
             <div class="hero-actions">
               <a class="btn primary" href="${backLink}">Retour au hub</a>
             </div>
             <div class="chips">
               <span>XP ${xpLabel}</span>
-              <span>VIP réel</span>
-              <span>Signature moderne</span>
+              <span>Achievement validé</span>
+              <span>Accès tardif</span>
             </div>
           </div>
           <aside class="hero-panel">
             <div class="profile">
               <div class="avatar">${avatar}</div>
               <div class="profile-info">
-                <span>Propriétaire officielle</span>
+                <span>Compte autorisé</span>
                 <strong>${displayName}</strong>
-                <em>Cachet du ${today}</em>
+                <em>Validation du ${today}</em>
               </div>
             </div>
             <div class="meter">
               <div class="meter-bar"><span style="width: ${meter}%"></span></div>
               <div class="meter-meta">
-                <span>Prestige</span>
+                <span>Progression</span>
                 <strong>${meter}%</strong>
               </div>
             </div>
@@ -247,48 +238,45 @@ function renderSecretPage() {
         <section class="cards-grid">
           <article class="card card-accent">
             <div class="card-head">
-              <span class="pill">Comité secret</span>
-              <h2>Décision officielle</h2>
+              <span class="pill">Message</span>
+              <h2>Le mot qui va bien</h2>
             </div>
-            <p>${pick(committeeLines)}</p>
-            <div class="card-tags">
-              <span>Validé</span>
-              <span>Drôle</span>
-              <span>Premium</span>
+            <div class="message">
+              ${messageParagraphs.map((line) => `<p>${line}</p>`).join("")}
             </div>
+            <div class="signature">— L'équipe (sans paillettes)</div>
           </article>
 
           <article class="card">
             <div class="card-head">
-              <span class="pill">Checklist</span>
-              <h2>Version Alexiane</h2>
+              <span class="pill">Récap</span>
+              <h2>Ce qui est validé</h2>
             </div>
             <ul>
-              ${checklist.map((item) => `<li>${item}</li>`).join("")}
+              ${recap.map((item) => `<li>${item}</li>`).join("")}
             </ul>
           </article>
 
           <article class="card">
             <div class="card-head">
-              <span class="pill">Message privé</span>
-              <h2>Mot doux calibré</h2>
+              <span class="pill">Dernier mot</span>
+              <h2>Merci, vraiment</h2>
             </div>
             <p>
-              Tu es la preuve qu'on peut être drôle, brillante et ultra stylée en même temps.
-              On a donc mis tout ça au propre, en version premium.
+              Même si c'est du second degré partout, le fond est là : merci pour tout.
             </p>
-            <div class="signature">— L'équipe (qui note tout)</div>
+            <div class="signature">— Signé : ceux qui tiennent la manette</div>
           </article>
         </section>
 
         <section class="callout">
           <div>
             <span class="callout-label">PS</span>
-            <p>${pick(psLines)}</p>
+            <p>${psLine}</p>
           </div>
           <div class="callout-seal">
             <span>${displayName}</span>
-            <em>Édition prestige</em>
+            <em>Accès débloqué</em>
           </div>
         </section>
       </main>
