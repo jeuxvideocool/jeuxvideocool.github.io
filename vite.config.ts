@@ -38,8 +38,6 @@ export default defineConfig(({ mode }) => {
     hub: path.resolve(process.cwd(), "apps/hub/index.html"),
     alex: path.resolve(process.cwd(), "apps/alex/index.html"),
     hub_de_jeux: path.resolve(process.cwd(), "apps/hub_de_jeux/index.html"),
-    profil: path.resolve(process.cwd(), "apps/profil/index.html"),
-    auth: path.resolve(process.cwd(), "apps/auth/index.html"),
   };
 
   games.forEach((game) => {

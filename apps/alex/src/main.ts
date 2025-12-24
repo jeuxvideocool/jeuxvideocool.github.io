@@ -5,7 +5,6 @@ import { getAuthState, subscribe as subscribeCloud } from "@storage/cloud";
 
 const basePath = import.meta.env.BASE_URL || "/";
 const app = document.getElementById("app")!;
-const authLink = withBasePath("/apps/auth/", basePath);
 let cloudState = getAuthState();
 
 const pick = <T,>(items: T[]) => items[Math.floor(Math.random() * items.length)];
@@ -20,7 +19,6 @@ function renderGate() {
             <h1>Synchronisation cloud en cours</h1>
             <p class="lead">Chargement de ta sauvegarde avant l'accès au secret.</p>
             <div class="hero-actions">
-              <a class="btn primary" href="${authLink}">Connexion cloud</a>
               <a class="btn ghost" href="${withBasePath("/", basePath)}">Retour au hub</a>
             </div>
           </div>
@@ -77,7 +75,6 @@ function renderSecretPage() {
   const badges = ["Édition 1/1", "Validé par le comité", "Premium certifié"];
 
   const backLink = withBasePath("/", basePath);
-  const profileLink = withBasePath("/apps/profil/", basePath);
 
   app.innerHTML = `
     <div class="page">
@@ -112,7 +109,6 @@ function renderSecretPage() {
             </p>
             <div class="hero-actions">
               <a class="btn primary" href="${backLink}">Retour au hub</a>
-              <a class="btn ghost" href="${profileLink}">Voir le profil</a>
             </div>
             <div class="chips">
               <span>XP ${xpLabel}</span>
