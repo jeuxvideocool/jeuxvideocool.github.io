@@ -314,18 +314,18 @@ function startFireworks() {
   };
 
   const burst = (x: number, y: number, power = 1) => {
-    const count = Math.round(52 * power * intensity);
+    const count = Math.round(82 * power * intensity);
     for (let i = 0; i < count; i += 1) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = (Math.random() * 2.2 + (reducedMotion ? 1.5 : 2.1)) * power;
-      const size = Math.random() * 1.6 + 1.2;
+      const speed = (Math.random() * 2.6 + (reducedMotion ? 1.7 : 2.6)) * power;
+      const size = Math.random() * 2.4 + 1.8;
       particles.push({
         x,
         y,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         alpha: 1,
-        decay: (0.012 + Math.random() * 0.016) * (reducedMotion ? 1.1 : 1),
+        decay: (0.007 + Math.random() * 0.01) * (reducedMotion ? 1.05 : 1),
         size,
         color: colors[Math.floor(Math.random() * colors.length)],
       });
@@ -337,13 +337,13 @@ function startFireworks() {
   const tick = () => {
     context.clearRect(0, 0, width, height);
     context.globalCompositeOperation = "lighter";
-    const gravity = reducedMotion ? 0.03 : 0.04;
+    const gravity = reducedMotion ? 0.028 : 0.035;
 
     for (let i = particles.length - 1; i >= 0; i -= 1) {
       const particle = particles[i];
       particle.vy += gravity;
-      particle.vx *= 0.98;
-      particle.vy *= 0.98;
+      particle.vx *= 0.985;
+      particle.vy *= 0.985;
       particle.x += particle.vx;
       particle.y += particle.vy;
       particle.alpha -= particle.decay;
@@ -353,8 +353,17 @@ function startFireworks() {
         continue;
       }
 
-      context.globalAlpha = particle.alpha;
+      const glowSize = particle.size * 2.1;
+      context.globalAlpha = particle.alpha * 0.45;
       context.fillStyle = particle.color;
+      context.shadowBlur = 16 * intensity;
+      context.shadowColor = particle.color;
+      context.beginPath();
+      context.arc(particle.x, particle.y, glowSize, 0, Math.PI * 2);
+      context.fill();
+
+      context.globalAlpha = particle.alpha;
+      context.shadowBlur = 0;
       context.beginPath();
       context.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
       context.fill();
@@ -377,26 +386,22 @@ function startFireworks() {
   resize();
   window.addEventListener("resize", resize);
 
-  const startTime = performance.now();
-  const durationMs = 10_000;
   const minDelay = reducedMotion ? 520 : 300;
-  const maxDelay = reducedMotion ? 780 : 560;
+  const maxDelay = reducedMotion ? 820 : 640;
 
   const scheduleNext = () => {
-    const elapsed = performance.now() - startTime;
-    if (elapsed >= durationMs) return;
     const delay = minDelay + Math.random() * (maxDelay - minDelay);
     window.setTimeout(() => {
       const x = width * (0.16 + Math.random() * 0.68);
       const y = height * (0.18 + Math.random() * 0.55);
-      const power = (0.6 + Math.random() * 0.45) * intensity;
+      const power = (0.75 + Math.random() * 0.6) * intensity;
       burst(x, y, power);
       launch();
       scheduleNext();
     }, delay);
   };
 
-  burst(width * 0.5, height * 0.3, 1.15 * intensity);
+  burst(width * 0.5, height * 0.3, 1.3 * intensity);
   launch();
   scheduleNext();
 }
